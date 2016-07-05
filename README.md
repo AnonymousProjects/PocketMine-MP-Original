@@ -2,7 +2,17 @@
 
 ### ～Advanced Minecraft: Pocket Edition Server～
 
-* This software is based on the [Genisys](https://github.com/iTXTech/Genisys).
+
+## Contents
+
+* [English](#english)
+* [日本語](#日本語)
+
+
+
+
+## English
+* This software is based on [Genisys](https://github.com/iTXTech/Genisys).
 
 ### Downloads
 * [Here](https://www.dropbox.com/sh/sewvewls2to7dbd/AAB79Kq6-LJYLSaqVsYKlAz2a?dl=0)
@@ -11,15 +21,7 @@
 If you are on Linux, use Docker to install Genisys.
 See the [wiki](https://github.com/iTXTech/Genisys/wiki/Use-Docker-to-run-Genisys) for more details.
 
-For other platform, see below.
-
-## Contents
-
-* [English](#english)
-* [日本語](#日本語)
-
-## English
-
+### To use this software...
 * One Core to rule anything
 * This core is an unofficial version of PocketMine-MP modified by Meshida.
 * PocketMine-MO and Genisys is only a fork of PocketMine-MP and all original code was written by the [PocketMine Team](https://github.com/PocketMine).
@@ -85,7 +87,16 @@ Most of the code in this repository was written by the PocketMine team and is li
 * LevelDB support for Windows
 
 ## 日本語
+* このソフトウェアは[Genisys](https://github.com/iTXTech/Genisys)をもとに制作しています。
 
+### ダウンロード
+* [こちら](https://www.dropbox.com/sh/sewvewls2to7dbd/AAB79Kq6-LJYLSaqVsYKlAz2a?dl=0)
+
+### インストール
+Linuxの場合、[こちら](https://github.com/iTXTech/Genisys/wiki/Use-Docker-to-run-Genisys)をご覧ください
+
+
+#利用に関して
 * このシステムはPocketMineをもとに製作しています。作者はめしだです。
 * PocketMine-MOとGenisysのもとになるPocketMine-MPは[PocketMine Team](https://github.com/PocketMine)が作成しています。
 * [PocketMine-MO用 PHP7](https://github.com/iTXTech/PHP-Genisys/)
