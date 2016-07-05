@@ -2,25 +2,20 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
- * 
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
+ *
  *
 */
 
@@ -31,11 +26,11 @@ use pocketmine\level\format\generic\BaseLevelProvider;
 use pocketmine\level\generator\Generator;
 use pocketmine\level\Level;
 use pocketmine\nbt\NBT;
-use pocketmine\nbt\tag\Byte;
-use pocketmine\nbt\tag\Compound;
-use pocketmine\nbt\tag\Int;
-use pocketmine\nbt\tag\Long;
-use pocketmine\nbt\tag\String;
+use pocketmine\nbt\tag\ByteTag;
+use pocketmine\nbt\tag\CompoundTag;
+use pocketmine\nbt\tag\IntTag;
+use pocketmine\nbt\tag\LongTag;
+use pocketmine\nbt\tag\StringTag;
 use pocketmine\tile\Spawnable;
 
 use pocketmine\utils\BinaryStream;
@@ -86,27 +81,27 @@ class McRegion extends BaseLevelProvider{
 			mkdir($path . "/region", 0777);
 		}
 		//TODO, add extra details
-		$levelData = new Compound("Data", [
-			"hardcore" => new Byte("hardcore", 0),
-			"initialized" => new Byte("initialized", 1),
-			"GameType" => new Int("GameType", 0),
-			"generatorVersion" => new Int("generatorVersion", 1), //2 in MCPE
-			"SpawnX" => new Int("SpawnX", 128),
-			"SpawnY" => new Int("SpawnY", 70),
-			"SpawnZ" => new Int("SpawnZ", 128),
-			"version" => new Int("version", 19133),
-			"DayTime" => new Int("DayTime", 0),
-			"LastPlayed" => new Long("LastPlayed", microtime(true) * 1000),
-			"RandomSeed" => new Long("RandomSeed", $seed),
-			"SizeOnDisk" => new Long("SizeOnDisk", 0),
-			"Time" => new Long("Time", 0),
-			"generatorName" => new String("generatorName", Generator::getGeneratorName($generator)),
-			"generatorOptions" => new String("generatorOptions", isset($options["preset"]) ? $options["preset"] : ""),
-			"LevelName" => new String("LevelName", $name),
-			"GameRules" => new Compound("GameRules", [])
+		$levelData = new CompoundTag("Data", [
+			"hardcore" => new ByteTag("hardcore", 0),
+			"initialized" => new ByteTag("initialized", 1),
+			"GameType" => new IntTag("GameType", 0),
+			"generatorVersion" => new IntTag("generatorVersion", 1), //2 in MCPE
+			"SpawnX" => new IntTag("SpawnX", 128),
+			"SpawnY" => new IntTag("SpawnY", 70),
+			"SpawnZ" => new IntTag("SpawnZ", 128),
+			"version" => new IntTag("version", 19133),
+			"DayTime" => new IntTag("DayTime", 0),
+			"LastPlayed" => new LongTag("LastPlayed", microtime(true) * 1000),
+			"RandomSeed" => new LongTag("RandomSeed", $seed),
+			"SizeOnDisk" => new LongTag("SizeOnDisk", 0),
+			"Time" => new LongTag("Time", 0),
+			"generatorName" => new StringTag("generatorName", Generator::getGeneratorName($generator)),
+			"generatorOptions" => new StringTag("generatorOptions", isset($options["preset"]) ? $options["preset"] : ""),
+			"LevelName" => new StringTag("LevelName", $name),
+			"GameRules" => new CompoundTag("GameRules", [])
 		]);
 		$nbt = new NBT(NBT::BIG_ENDIAN);
-		$nbt->setData(new Compound("", [
+		$nbt->setData(new CompoundTag("", [
 			"Data" => $levelData
 		]));
 		$buffer = $nbt->writeCompressed();
@@ -124,37 +119,42 @@ class McRegion extends BaseLevelProvider{
 			throw new ChunkException("Invalid Chunk sent");
 		}
 
-		$tiles = "";
+		if($this->getServer()->asyncChunkRequest){
+			$task = new ChunkRequestTask($this->getLevel(), $chunk);
+			$this->getServer()->getScheduler()->scheduleAsyncTask($task);
+		}else{
+			$tiles = "";
 
-		if(count($chunk->getTiles()) > 0){
-			$nbt = new NBT(NBT::LITTLE_ENDIAN);
-			$list = [];
-			foreach($chunk->getTiles() as $tile){
-				if($tile instanceof Spawnable){
-					$list[] = $tile->getSpawnCompound();
+			if(count($chunk->getTiles()) > 0){
+				$nbt = new NBT(NBT::LITTLE_ENDIAN);
+				$list = [];
+				foreach($chunk->getTiles() as $tile){
+					if($tile instanceof Spawnable){
+						$list[] = $tile->getSpawnCompound();
+					}
 				}
+				$nbt->setData($list);
+				$tiles = $nbt->write();
 			}
-			$nbt->setData($list);
-			$tiles = $nbt->write();
+
+			$extraData = new BinaryStream();
+			$extraData->putLInt(count($chunk->getBlockExtraDataArray()));
+			foreach($chunk->getBlockExtraDataArray() as $key => $value){
+				$extraData->putLInt($key);
+				$extraData->putLShort($value);
+			}
+
+			$ordered = $chunk->getBlockIdArray() .
+				$chunk->getBlockDataArray() .
+				$chunk->getBlockSkyLightArray() .
+				$chunk->getBlockLightArray() .
+				pack("C*", ...$chunk->getHeightMapArray()) .
+				pack("N*", ...$chunk->getBiomeColorArray()) .
+				$extraData->getBuffer() .
+				$tiles;
+
+			$this->getLevel()->chunkRequestCallback($x, $z, $ordered);
 		}
-
-		$extraData = new BinaryStream();
-		$extraData->putLInt(count($chunk->getBlockExtraDataArray()));
-		foreach($chunk->getBlockExtraDataArray() as $key => $value){
-			$extraData->putLInt($key);
-			$extraData->putLShort($value);
-		}
-
-		$ordered = $chunk->getBlockIdArray() .
-			$chunk->getBlockDataArray() .
-			$chunk->getBlockSkyLightArray() .
-			$chunk->getBlockLightArray() .
-			pack("C*", ...$chunk->getHeightMapArray()) .
-			pack("N*", ...$chunk->getBiomeColorArray()) .
-			$extraData->getBuffer() .
-			$tiles;
-
-		$this->getLevel()->chunkRequestCallback($x, $z, $ordered);
 
 		return null;
 	}

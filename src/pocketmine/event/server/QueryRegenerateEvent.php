@@ -53,7 +53,7 @@ class QueryRegenerateEvent extends ServerEvent{
 
 	public function __construct(Server $server, $timeout = 5){
 		$this->timeout = $timeout;
-		$this->serverName = $server->getServerName();
+		$this->serverName = $server->getMotd();
 		$this->listPlugins = $server->getProperty("settings.query-plugins", true);
 		$this->plugins = $server->getPluginManager()->getPlugins();
 		$this->players = [];
@@ -63,12 +63,19 @@ class QueryRegenerateEvent extends ServerEvent{
 			}
 		}
 
+		if($server->isDServerEnabled() and $server->dserverConfig["queryMaxPlayers"]) $pc = $server->dserverConfig["queryMaxPlayers"];
+		elseif($server->isDServerEnabled() and $server->dserverConfig["queryAllPlayers"]) $pc = $server->getDServerMaxPlayers();
+		else $pc = $server->getMaxPlayers();
+
+		if($server->isDServerEnabled() and $server->dserverConfig["queryPlayers"]) $poc = $server->getDServerOnlinePlayers();
+		else $poc = count($this->players);
+
 		$this->gametype = ($server->getGamemode() & 0x01) === 0 ? "SMP" : "CMP";
 		$this->version = $server->getVersion();
 		$this->server_engine = $server->getName() . " " . $server->getPocketMineVersion();
 		$this->map = $server->getDefaultLevel() === null ? "unknown" : $server->getDefaultLevel()->getName();
-		$this->numPlayers = count($this->players);
-		$this->maxPlayers = $server->getMaxPlayers();
+		$this->numPlayers = $poc;
+		$this->maxPlayers = $pc;
 		$this->whitelist = $server->hasWhitelist() ? "on" : "off";
 		$this->port = $server->getPort();
 		$this->ip = $server->getIp();
@@ -216,7 +223,7 @@ class QueryRegenerateEvent extends ServerEvent{
 	}
 
 	public function getShortQuery(){
-		return $this->serverName . "\x00" . $this->gametype . "\x00" . $this->map . "\x00" . $this->numPlayers . "\x00" . $this->maxPlayers . "\x00" . pack("v", $this->port) . $this->ip . "\x00";
+		return $this->serverName . "\x00" . $this->gametype . "\x00" . $this->map . "\x00" . $this->numPlayers . "\x00" . $this->maxPlayers . "\x00" . Binary::writeLShort($this->port) . $this->ip . "\x00";
 	}
 
 }

@@ -2,24 +2,19 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____  
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \ 
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/ 
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_| 
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
  * 
  *
 */
@@ -29,6 +24,8 @@ namespace pocketmine\block;
 use pocketmine\event\block\LeavesDecayEvent;
 use pocketmine\item\Item;
 use pocketmine\item\Tool;
+use pocketmine\item\Dye;
+use pocketmine\item\enchantment\enchantment;
 use pocketmine\level\Level;
 use pocketmine\Player;
 use pocketmine\Server;
@@ -47,7 +44,7 @@ class Leaves extends Transparent{
 		$this->meta = $meta;
 	}
 
-	public function getHardness(){
+	public function getHardness() {
 		return 0.2;
 	}
 
@@ -55,7 +52,15 @@ class Leaves extends Transparent{
 		return Tool::TYPE_SHEARS;
 	}
 
-	public function getName(){
+	public function getBurnChance() : int{
+		return 30;
+	}
+
+	public function getBurnAbility() : int{
+		return 60;
+	}
+
+	public function getName() : string{
 		static $names = [
 			self::OAK => "Oak Leaves",
 			self::SPRUCE => "Spruce Leaves",
@@ -162,19 +167,22 @@ class Leaves extends Transparent{
 		$this->getLevel()->setBlock($this, $this, true);
 	}
 
-	public function getDrops(Item $item){
+	public function getDrops(Item $item) : array {
 		$drops = [];
-		if($item->isShears()){
+		if($item->isShears() or $item->getEnchantmentLevel(Enchantment::TYPE_MINING_SILK_TOUCH) > 0){
 			$drops[] = [Item::LEAVES, $this->meta & 0x03, 1];
 		}else{
-			if(mt_rand(1, 20) === 1){ //Saplings
+			$fortunel = $item->getEnchantmentLevel(Enchantment::TYPE_MINING_FORTUNE);
+			$fortunel = $fortunel > 3 ? 3 : $fortunel;
+			$rates = [20,16,12,10];
+			if(mt_rand(1, $rates[$fortunel]) === 1){ //Saplings
 				$drops[] = [Item::SAPLING, $this->meta & 0x03, 1];
 			}
-			if(($this->meta & 0x03) === self::OAK and mt_rand(1, 200) === 1){ //Apples
+			$rates = [200,180,160,120];
+			if(($this->meta & 0x03) === self::OAK and mt_rand(1, $rates[$fortunel]) === 1){ //Apples
 				$drops[] = [Item::APPLE, 0, 1];
 			}
 		}
-
 		return $drops;
 	}
 }

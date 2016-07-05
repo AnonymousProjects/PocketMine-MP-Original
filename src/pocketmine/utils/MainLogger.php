@@ -2,25 +2,20 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
- * 
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
+ *
  *
 */
 
@@ -39,6 +34,25 @@ class MainLogger extends \AttachableThreadedLogger{
 	/** @var MainLogger */
 	public static $logger = null;
 
+	/** Extra Settings */
+	protected $write = true;
+
+	public $shouldSendMsg = "";
+	public $shouldRecordMsg = false;
+	private $lastGet = 0;
+
+	public function setSendMsg($b){
+		$this->shouldRecordMsg = $b;
+		$this->lastGet = time();
+	}
+
+	public function getMessages(){
+		$msg = $this->shouldSendMsg;
+		$this->shouldSendMsg = "";
+		$this->lastGet = time();
+		return $msg;
+	}
+
 	/**
 	 * @param string $logFile
 	 * @param bool   $logDebug
@@ -53,7 +67,7 @@ class MainLogger extends \AttachableThreadedLogger{
 		touch($logFile);
 		$this->logFile = $logFile;
 		$this->logDebug = (bool) $logDebug;
-		$this->logStream = \ThreadedFactory::create();
+		$this->logStream = new \Threaded;
 		$this->start();
 	}
 
@@ -64,39 +78,39 @@ class MainLogger extends \AttachableThreadedLogger{
 		return static::$logger;
 	}
 
-	public function emergency($message){
-		$this->send($message, \LogLevel::EMERGENCY, "EMERGENCY", TextFormat::RED);
+	public function emergency($message, $name = "緊急"){
+		$this->send($message, \LogLevel::EMERGENCY, $name, TextFormat::RED);
 	}
 
-	public function alert($message){
-		$this->send($message, \LogLevel::ALERT, "ALERT", TextFormat::RED);
+	public function alert($message, $name = "警告"){
+		$this->send($message, \LogLevel::ALERT, $name, TextFormat::RED);
 	}
 
-	public function critical($message){
-		$this->send($message, \LogLevel::CRITICAL, "CRITICAL", TextFormat::RED);
+	public function critical($message, $name = "危険"){
+		$this->send($message, \LogLevel::CRITICAL, $name, TextFormat::RED);
 	}
 
-	public function error($message){
-		$this->send($message, \LogLevel::ERROR, "ERROR", TextFormat::DARK_RED);
+	public function error($message, $name = "エラー"){
+		$this->send($message, \LogLevel::ERROR, $name, TextFormat::DARK_RED);
 	}
 
-	public function warning($message){
-		$this->send($message, \LogLevel::WARNING, "WARNING", TextFormat::YELLOW);
+	public function warning($message, $name = "注意"){
+		$this->send($message, \LogLevel::WARNING, $name, TextFormat::YELLOW);
 	}
 
-	public function notice($message){
-		$this->send($message, \LogLevel::NOTICE, "NOTICE", TextFormat::AQUA);
+	public function notice($message, $name = "通知"){
+		$this->send($message, \LogLevel::NOTICE, $name, TextFormat::AQUA);
 	}
 
-	public function info($message){
-		$this->send($message, \LogLevel::INFO, "INFO", TextFormat::WHITE);
+	public function info($message, $name = "情報"){
+		$this->send($message, \LogLevel::INFO, $name, TextFormat::WHITE);
 	}
 
-	public function debug($message){
+	public function debug($message, $name = "デバッグ"){
 		if($this->logDebug === false){
 			return;
 		}
-		$this->send($message, \LogLevel::DEBUG, "DEBUG", TextFormat::GRAY);
+		$this->send($message, \LogLevel::DEBUG, $name, TextFormat::GRAY);
 	}
 
 	/**
@@ -106,7 +120,7 @@ class MainLogger extends \AttachableThreadedLogger{
 		$this->logDebug = (bool) $logDebug;
 	}
 
-	public function logException(\Exception $e, $trace = null){
+	public function logException(\Throwable $e, $trace = null){
 		if($trace === null){
 			$trace = $e->getTrace();
 		}
@@ -116,22 +130,22 @@ class MainLogger extends \AttachableThreadedLogger{
 		$errline = $e->getLine();
 
 		$errorConversion = [
-			0 => "EXCEPTION",
-			E_ERROR => "E_ERROR",
-			E_WARNING => "E_WARNING",
-			E_PARSE => "E_PARSE",
-			E_NOTICE => "E_NOTICE",
-			E_CORE_ERROR => "E_CORE_ERROR",
-			E_CORE_WARNING => "E_CORE_WARNING",
-			E_COMPILE_ERROR => "E_COMPILE_ERROR",
-			E_COMPILE_WARNING => "E_COMPILE_WARNING",
-			E_USER_ERROR => "E_USER_ERROR",
-			E_USER_WARNING => "E_USER_WARNING",
-			E_USER_NOTICE => "E_USER_NOTICE",
-			E_STRICT => "E_STRICT",
-			E_RECOVERABLE_ERROR => "E_RECOVERABLE_ERROR",
-			E_DEPRECATED => "E_DEPRECATED",
-			E_USER_DEPRECATED => "E_USER_DEPRECATED",
+			0 => "例外",
+			E_ERROR => "重大",
+			E_WARNING => "警告",
+			E_PARSE => "構成エラー",
+			E_NOTICE => "エラーの可能性",
+			E_CORE_ERROR => "システムエラー",
+			E_CORE_WARNING => "システム警告",
+			E_COMPILE_ERROR => "コンパイルエラー",
+			E_COMPILE_WARNING => "構成への警告",
+			E_USER_ERROR => "ユーザ側へのエラー",
+			E_USER_WARNING => "ユーザ側への警告",
+			E_USER_NOTICE => "ユーザに問題",
+			E_STRICT => "互換性のエラー",
+			E_RECOVERABLE_ERROR => "致命的エラー",
+			E_DEPRECATED => "コードの警告",
+			E_USER_DEPRECATED => "ユーザ側の警告",
 		];
 		if($errno === 0){
 			$type = LogLevel::CRITICAL;
@@ -194,7 +208,17 @@ class MainLogger extends \AttachableThreadedLogger{
 			$threadName = (new \ReflectionClass($thread))->getShortName() . " thread";
 		}
 
-		$message = TextFormat::toANSI(TextFormat::AQUA . "[" . date("H:i:s", $now) . "] ". TextFormat::RESET . $color ."[" . $prefix . "]:" . " " . $message . TextFormat::RESET);
+		if($this->shouldRecordMsg){
+			if((time() - $this->lastGet) >= 10) $this->shouldRecordMsg = false; // 10 secs timeout
+			else{
+				if(strlen($this->shouldSendMsg) >= 10000) $this->shouldSendMsg = "";
+				$this->shouldSendMsg .= $color . "|" . $prefix . "|" . trim($message, "\r\n") . "\n";
+			}
+		}
+
+		$message = TextFormat::toANSI(TextFormat::AQUA . "[" . date("H:i:s", $now) . "] " . TextFormat::RESET . $color . "[" . $prefix . "]:" . " " . $message . TextFormat::RESET);
+		//$message = TextFormat::toANSI(TextFormat::AQUA . "[" . date("H:i:s") . "] ". TextFormat::RESET . $color ."<".$prefix . ">" . " " . $message . TextFormat::RESET);
+
 		$cleanMessage = TextFormat::clean($message);
 
 		if(!Terminal::hasFormattingCodes()){
@@ -215,31 +239,67 @@ class MainLogger extends \AttachableThreadedLogger{
 		}
 	}
 
-	public function run(){
+	/*public function run(){
 		$this->shutdown = false;
-		$this->logResource = fopen($this->logFile, "a+b");
-		if(!is_resource($this->logResource)){
-			throw new \RuntimeException("Couldn't open log file");
-		}
+		if($this->write){
+			$this->logResource = fopen($this->logFile, "a+b");
+			if(!is_resource($this->logResource)){
+				throw new \RuntimeException("Couldn't open log file");
+			}
 
-		while($this->shutdown === false){
-			$this->synchronized(function(){
+			while($this->shutdown === false){
+				if(!$this->write) {
+					fclose($this->logResource);
+					break;
+				}
+				$this->synchronized(function(){
+					while($this->logStream->count() > 0){
+						$chunk = $this->logStream->shift();
+						fwrite($this->logResource, $chunk);
+					}
+
+					$this->wait(25000);
+				});
+			}
+
+			if($this->logStream->count() > 0){
 				while($this->logStream->count() > 0){
 					$chunk = $this->logStream->shift();
 					fwrite($this->logResource, $chunk);
 				}
+			}
 
-				$this->wait(25000);
-			});
+			fclose($this->logResource);
 		}
+	}*/
 
-		if($this->logStream->count() > 0){
-			while($this->logStream->count() > 0){
-				$chunk = $this->logStream->shift();
-				fwrite($this->logResource, $chunk);
+	public function run(){
+		$this->shutdown = false;
+		if($this->write){
+			//$this->logResource = file_put_contents($this->logFile, "a+b", FILE_APPEND);
+
+			while($this->shutdown === false){
+				if(!$this->write) break;
+				$this->synchronized(function(){
+					while($this->logStream->count() > 0){
+						$chunk = $this->logStream->shift();
+						$this->logResource = file_put_contents($this->logFile, $chunk, FILE_APPEND);
+					}
+
+					$this->wait(25000);
+				});
+			}
+
+			if($this->logStream->count() > 0){
+				while($this->logStream->count() > 0){
+					$chunk = $this->logStream->shift();
+					$this->logResource = file_put_contents($this->logFile, $chunk, FILE_APPEND);
+				}
 			}
 		}
+	}
 
-		fclose($this->logResource);
+	public function setWrite($write){
+		$this->write = $write;
 	}
 }

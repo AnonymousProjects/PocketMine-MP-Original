@@ -2,25 +2,20 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
- * 
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
+ *
  *
 */
 
@@ -44,6 +39,8 @@ class PluginDescription{
 	private $prefix = null;
 	private $order = PluginLoadOrder::POSTWORLD;
 
+	private $geniapi;
+
 	/**
 	 * @var Permission[]
 	 */
@@ -53,7 +50,7 @@ class PluginDescription{
 	 * @param string|array $yamlString
 	 */
 	public function __construct($yamlString){
-		$this->loadMap(!is_array($yamlString) ? yaml_parse($yamlString) : $yamlString);
+		$this->loadMap(!is_array($yamlString) ? \yaml_parse($yamlString) : $yamlString);
 	}
 
 	/**
@@ -70,6 +67,12 @@ class PluginDescription{
 		$this->version = $plugin["version"];
 		$this->main = $plugin["main"];
 		$this->api = !is_array($plugin["api"]) ? [$plugin["api"]] : $plugin["api"];
+		if(!isset($plugin["geniapi"])){
+			$this->geniapi = ["1.0.0"];
+		}else{
+			$this->geniapi = !is_array($plugin["geniapi"]) ? [$plugin["geniapi"]] : $plugin["geniapi"];
+		}
+
 		if(stripos($this->main, "pocketmine\\") === 0){
 			throw new PluginException("Invalid PluginDescription main, cannot start within the PocketMine namespace");
 		}
@@ -137,6 +140,13 @@ class PluginDescription{
 	/**
 	 * @return array
 	 */
+	public function getCompatibleGeniApis(){
+		return $this->geniapi;
+	}
+
+	/**
+	 * @return array
+	 */
 	public function getAuthors(){
 		return $this->authors;
 	}
@@ -186,7 +196,7 @@ class PluginDescription{
 	/**
 	 * @return string
 	 */
-	public function getName(){
+	public function getName() : string{
 		return $this->name;
 	}
 

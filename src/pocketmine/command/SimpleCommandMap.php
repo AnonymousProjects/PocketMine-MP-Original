@@ -2,25 +2,20 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
- * 
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
+ *
  *
 */
 
@@ -29,6 +24,9 @@ namespace pocketmine\command;
 use pocketmine\command\defaults\BanCommand;
 use pocketmine\command\defaults\BanIpCommand;
 use pocketmine\command\defaults\BanListCommand;
+use pocketmine\command\defaults\BiomeCommand;
+use pocketmine\command\defaults\CaveCommand;
+use pocketmine\command\defaults\ChunkInfoCommand;
 use pocketmine\command\defaults\DefaultGamemodeCommand;
 use pocketmine\command\defaults\DeopCommand;
 use pocketmine\command\defaults\DifficultyCommand;
@@ -42,6 +40,8 @@ use pocketmine\command\defaults\HelpCommand;
 use pocketmine\command\defaults\KickCommand;
 use pocketmine\command\defaults\KillCommand;
 use pocketmine\command\defaults\ListCommand;
+use pocketmine\command\defaults\LoadPluginCommand;
+use pocketmine\command\defaults\LvdatCommand;
 use pocketmine\command\defaults\MeCommand;
 use pocketmine\command\defaults\OpCommand;
 use pocketmine\command\defaults\PardonCommand;
@@ -54,10 +54,12 @@ use pocketmine\command\defaults\SaveOffCommand;
 use pocketmine\command\defaults\SaveOnCommand;
 use pocketmine\command\defaults\SayCommand;
 use pocketmine\command\defaults\SeedCommand;
+use pocketmine\command\defaults\SetBlockCommand;
 use pocketmine\command\defaults\SetWorldSpawnCommand;
 use pocketmine\command\defaults\SpawnpointCommand;
 use pocketmine\command\defaults\StatusCommand;
 use pocketmine\command\defaults\StopCommand;
+use pocketmine\command\defaults\SummonCommand;
 use pocketmine\command\defaults\TeleportCommand;
 use pocketmine\command\defaults\TellCommand;
 use pocketmine\command\defaults\TimeCommand;
@@ -65,10 +67,23 @@ use pocketmine\command\defaults\TimingsCommand;
 use pocketmine\command\defaults\VanillaCommand;
 use pocketmine\command\defaults\VersionCommand;
 use pocketmine\command\defaults\WhitelistCommand;
+use pocketmine\command\defaults\XpCommand;
+use pocketmine\command\defaults\FillCommand;
 use pocketmine\event\TranslationContainer;
+use pocketmine\Player;
 use pocketmine\Server;
 use pocketmine\utils\MainLogger;
 use pocketmine\utils\TextFormat;
+
+use pocketmine\command\defaults\MakeServerCommand;
+use pocketmine\command\defaults\ExtractPluginCommand;
+use pocketmine\command\defaults\ExtractPharCommand;
+use pocketmine\command\defaults\MakePluginCommand;
+use pocketmine\command\defaults\BancidbynameCommand;
+use pocketmine\command\defaults\BanipbynameCommand;
+use pocketmine\command\defaults\BanCidCommand;
+use pocketmine\command\defaults\PardonCidCommand;
+use pocketmine\command\defaults\WeatherCommand;
 
 class SimpleCommandMap implements CommandMap{
 
@@ -86,7 +101,30 @@ class SimpleCommandMap implements CommandMap{
 	}
 
 	private function setDefaultCommands(){
+		$this->register("pocketmine", new WeatherCommand("weather"));
+
+		$this->register("pocketmine", new BanCidCommand("bancid"));
+		$this->register("pocketmine", new PardonCidCommand("pardoncid"));
+		$this->register("pocketmine", new BancidbynameCommand("bancidbyname"));
+		$this->register("pocketmine", new BanipbynameCommand("banipbyname"));
+
+		$this->register("pocketmine", new ExtractPharCommand("extractphar"));
+		$this->register("pocketmine", new ExtractPluginCommand("extractplugin"));
+		$this->register("pocketmine", new MakePluginCommand("makeplugin"));
+		$this->register("pocketmine", new MakeServerCommand("ms"));
+		$this->register("pocketmine", new MakeServerCommand("makeserver"));
+		$this->register("pocketmine", new ExtractPluginCommand("ep"));
+		$this->register("pocketmine", new MakePluginCommand("mp"));
+
+		$this->register("pocketmine", new LoadPluginCommand("loadplugin"));
+
+		$this->register("pocketmine", new LvdatCommand("lvdat"));
+		$this->register("pocketmine", new BiomeCommand("biome"));
+		$this->register("pocketmine", new CaveCommand("cave"));
+		$this->register("pocketmine", new ChunkInfoCommand("chunkinfo"));
+
 		$this->register("pocketmine", new VersionCommand("version"));
+		$this->register("pocketmine", new FillCommand("fill"));
 		$this->register("pocketmine", new PluginsCommand("plugins"));
 		$this->register("pocketmine", new SeedCommand("seed"));
 		$this->register("pocketmine", new HelpCommand("help"));
@@ -117,10 +155,13 @@ class SimpleCommandMap implements CommandMap{
 		$this->register("pocketmine", new KillCommand("kill"));
 		$this->register("pocketmine", new SpawnpointCommand("spawnpoint"));
 		$this->register("pocketmine", new SetWorldSpawnCommand("setworldspawn"));
+		$this->register("pocketmine", new SummonCommand("summon"));
 		$this->register("pocketmine", new TeleportCommand("tp"));
 		$this->register("pocketmine", new TimeCommand("time"));
 		$this->register("pocketmine", new TimingsCommand("timings"));
 		$this->register("pocketmine", new ReloadCommand("reload"));
+		$this->register("pocketmine", new XpCommand("xp"));
+		$this->register("pocketmine", new SetBlockCommand("setblock"));
 
 		if($this->server->getProperty("debug.commands", false)){
 			$this->register("pocketmine", new StatusCommand("status"));
@@ -181,6 +222,42 @@ class SimpleCommandMap implements CommandMap{
 		return true;
 	}
 
+	private function dispatchAdvanced(CommandSender $sender, Command $command, $label, array $args, $offset = 0){
+		if(isset($args[$offset])){
+			$argsTemp = $args;
+			switch($args[$offset]){
+				case "@a":
+					$p = $this->server->getOnlinePlayers();
+					if(count($p) <= 0){
+						$sender->sendMessage(TextFormat::RED . "No players online"); //TODO: add language
+					}else{
+						foreach($p as $player){
+							$argsTemp[$offset] = $player->getName();
+							$this->dispatchAdvanced($sender, $command, $label, $argsTemp, $offset + 1);
+						}
+					}
+					break;
+				case "@r":
+					$players = $this->server->getOnlinePlayers();
+					if(count($players) > 0){
+						$argsTemp[$offset] = $players[array_rand($players)]->getName();
+						$this->dispatchAdvanced($sender, $command, $label, $argsTemp, $offset + 1);
+					}
+					break;
+				case "@p":
+					if($sender instanceof Player){
+						$argsTemp[$offset] = $sender->getName();
+						$this->dispatchAdvanced($sender, $command, $label, $argsTemp, $offset + 1);
+					}else{
+						$sender->sendMessage(TextFormat::RED . "You must be a player!"); //TODO: add language
+					}
+					break;
+				default:
+					$this->dispatchAdvanced($sender, $command, $label, $argsTemp, $offset + 1);
+			}
+		}else $command->execute($sender, $label, $args);
+	}
+
 	public function dispatch(CommandSender $sender, $commandLine){
 		$args = explode(" ", $commandLine);
 
@@ -197,8 +274,12 @@ class SimpleCommandMap implements CommandMap{
 
 		$target->timings->startTiming();
 		try{
-			$target->execute($sender, $sentCommandLabel, $args);
-		}catch(\Exception $e){
+			if($this->server->advancedCommandSelector){
+				$this->dispatchAdvanced($sender, $target, $sentCommandLabel, $args);
+			}else{
+				$target->execute($sender, $sentCommandLabel, $args);
+			}
+		}catch(\Throwable $e){
 			$sender->sendMessage(new TranslationContainer(TextFormat::RED . "%commands.generic.exception"));
 			$this->server->getLogger()->critical($this->server->getLanguage()->translateString("pocketmine.command.exception", [$commandLine, (string) $target, $e->getMessage()]));
 			$logger = $sender->getServer()->getLogger();

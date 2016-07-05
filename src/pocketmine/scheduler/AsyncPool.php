@@ -2,25 +2,20 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
- * 
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
+ *
  *
 */
 
@@ -52,7 +47,7 @@ class AsyncPool{
 
 		for($i = 0; $i < $this->size; ++$i){
 			$this->workerUsage[$i] = 0;
-			$this->workers[$i] = new AsyncWorker;
+			$this->workers[$i] = new AsyncWorker($this->server->getLogger(), $i + 1);
 			$this->workers[$i]->setClassLoader($this->server->getLoader());
 			$this->workers[$i]->start();
 		}
@@ -67,7 +62,7 @@ class AsyncPool{
 		if($newSize > $this->size){
 			for($i = $this->size; $i < $newSize; ++$i){
 				$this->workerUsage[$i] = 0;
-				$this->workers[$i] = new AsyncWorker;
+				$this->workers[$i] = new AsyncWorker($this->server->getLogger(), $i + 1);
 				$this->workers[$i]->setClassLoader($this->server->getLoader());
 				$this->workers[$i]->start();
 			}
@@ -110,12 +105,14 @@ class AsyncPool{
 	}
 
 	private function removeTask(AsyncTask $task, $force = false){
+		$task->setGarbage();
+
 		if(isset($this->taskWorkers[$task->getTaskId()])){
 			if(!$force and ($task->isRunning() or !$task->isGarbage())){
 				return;
 			}
-			$this->workers[$w = $this->taskWorkers[$task->getTaskId()]]->unstack($task);
-			$this->workerUsage[$w]--;
+			$this->workerUsage[$this->taskWorkers[$task->getTaskId()]]--;
+			$this->workers[$this->taskWorkers[$task->getTaskId()]]->collector($task);
 		}
 
 		unset($this->tasks[$task->getTaskId()]);
@@ -132,7 +129,7 @@ class AsyncPool{
 			}
 
 			if(count($this->tasks) > 0){
-				usleep(25000);
+				Server::microSleep(25000);
 			}
 		}while(count($this->tasks) > 0);
 
@@ -148,18 +145,16 @@ class AsyncPool{
 		Timings::$schedulerAsyncTimer->startTiming();
 
 		foreach($this->tasks as $task){
-			if($task->isGarbage() and !$task->isRunning()){
+			if($task->isFinished() and !$task->isRunning() and !$task->isCrashed()){
 
 				if(!$task->hasCancelledRun()){
 					$task->onCompletion($this->server);
 				}
 
 				$this->removeTask($task);
-			}elseif($task->isTerminated()){
-				$info = $task->getTerminationInfo();
+			}elseif($task->isTerminated() or $task->isCrashed()){
+				$this->server->getLogger()->critical("Could not execute asynchronous task " . (new \ReflectionClass($task))->getShortName() . ": Task crashed");
 				$this->removeTask($task, true);
-				$this->server->getLogger()->critical("Could not execute asynchronous task " . (new \ReflectionClass($task))->getShortName() . ": " . (isset($info["message"]) ? $info["message"] : "Unknown"));
-				$this->server->getLogger()->critical("On ".$info["scope"].", line ".$info["line"] .", ".$info["function"]."()");
 			}
 		}
 

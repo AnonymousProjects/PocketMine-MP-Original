@@ -2,24 +2,19 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____  
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \ 
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/ 
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_| 
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
  * 
  *
 */
@@ -27,24 +22,24 @@
 namespace pocketmine\tile;
 
 use pocketmine\level\format\FullChunk;
-use pocketmine\nbt\tag\Compound;
-use pocketmine\nbt\tag\Int;
-use pocketmine\nbt\tag\String;
+use pocketmine\nbt\tag\CompoundTag;
+use pocketmine\nbt\tag\IntTag;
+use pocketmine\nbt\tag\StringTag;
 
 class Sign extends Spawnable{
 
-	public function __construct(FullChunk $chunk, Compound $nbt){
+	public function __construct(FullChunk $chunk, CompoundTag $nbt){
 		if(!isset($nbt->Text1)){
-			$nbt->Text1 = new String("Text1", "");
+			$nbt->Text1 = new StringTag("Text1", "");
 		}
 		if(!isset($nbt->Text2)){
-			$nbt->Text2 = new String("Text2", "");
+			$nbt->Text2 = new StringTag("Text2", "");
 		}
 		if(!isset($nbt->Text3)){
-			$nbt->Text3 = new String("Text3", "");
+			$nbt->Text3 = new StringTag("Text3", "");
 		}
 		if(!isset($nbt->Text4)){
-			$nbt->Text4 = new String("Text4", "");
+			$nbt->Text4 = new StringTag("Text4", "");
 		}
 
 		parent::__construct($chunk, $nbt);
@@ -56,10 +51,10 @@ class Sign extends Spawnable{
 	}
 
 	public function setText($line1 = "", $line2 = "", $line3 = "", $line4 = ""){
-		$this->namedtag->Text1 = new String("Text1", $line1);
-		$this->namedtag->Text2 = new String("Text2", $line2);
-		$this->namedtag->Text3 = new String("Text3", $line3);
-		$this->namedtag->Text4 = new String("Text4", $line4);
+		$this->namedtag->Text1 = new StringTag("Text1", $line1);
+		$this->namedtag->Text2 = new StringTag("Text2", $line2);
+		$this->namedtag->Text3 = new StringTag("Text3", $line3);
+		$this->namedtag->Text4 = new StringTag("Text4", $line4);
 		$this->spawnToAll();
 
 		if($this->chunk){
@@ -80,15 +75,15 @@ class Sign extends Spawnable{
 	}
 
 	public function getSpawnCompound(){
-		return new Compound("", [
-			new String("id", Tile::SIGN),
+		return new CompoundTag("", [
+			new StringTag("id", Tile::SIGN),
 			$this->namedtag->Text1,
 			$this->namedtag->Text2,
 			$this->namedtag->Text3,
 			$this->namedtag->Text4,
-			new Int("x", (int) $this->x),
-			new Int("y", (int) $this->y),
-			new Int("z", (int) $this->z)
+			new IntTag("x", (int) $this->x),
+			new IntTag("y", (int) $this->y),
+			new IntTag("z", (int) $this->z)
 		]);
 	}
 

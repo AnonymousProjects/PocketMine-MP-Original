@@ -2,24 +2,19 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____  
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \ 
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/ 
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_| 
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
  * 
  *
 */
@@ -49,6 +44,14 @@ class Position extends Vector3{
 
 	public static function fromObject(Vector3 $pos, Level $level = null){
 		return new Position($pos->x, $pos->y, $pos->z, $level);
+	}
+	
+	public function add($x, $y = 0, $z = 0){
+		if($x instanceof Vector3){
+			return new Position($this->x + $x->x, $this->y + $x->y, $this->z + $x->z, $this->level);
+		}else{
+			return new Position($this->x + $x, $this->y + $y, $this->z + $z, $this->level);
+		}
 	}
 
 	/**
@@ -129,6 +132,14 @@ class Position extends Vector3{
 		$this->x = $x;
 		$this->y = $y;
 		$this->z = $z;
+		return $this;
+	}
+
+	public function fromObjectAdd(Vector3 $pos, $x, $y, $z){
+		if($pos instanceof Position){
+			$this->level = $pos->level;
+		}
+		parent::fromObjectAdd($pos, $x, $y, $z);
 		return $this;
 	}
 

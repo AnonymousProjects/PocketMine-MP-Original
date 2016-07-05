@@ -1,4 +1,5 @@
 <?php
+
 /*
  *
  *  ____            _        _   __  __ _                  __  __ ____  
@@ -17,38 +18,47 @@
  * 
  *
 */
+
 namespace pocketmine\block;
+
 use pocketmine\item\Item;
 use pocketmine\item\Tool;
-use pocketmine\level\Level;
+use pocketmine\item\enchantment\enchantment;
+
 class Ice extends Transparent{
+
 	protected $id = self::ICE;
+
 	public function __construct(){
+
 	}
-	public function getName(){
+
+	public function getName() : string{
 		return "Ice";
 	}
-	public function getHardness(){
+
+	public function getHardness() {
 		return 0.5;
 	}
+
 	public function getToolType(){
 		return Tool::TYPE_PICKAXE;
 	}
+
 	public function onBreak(Item $item){
-		$this->getLevel()->setBlock($this, new Water(), true);
+		if($item->getEnchantmentLevel(Enchantment::TYPE_MINING_SILK_TOUCH) === 0){
+			$this->getLevel()->setBlock($this, new Water(), true);
+		}
 		return true;
 	}
-	public function getDrops(Item $item){
-		return [];
-	}
-	
-	public function onUpdate($type){
-		if($type === Level::BLOCK_UPDATE_RANDOM){
-			if($this->getLevel()->getBlockLightAt($this->x, $this->y, $this->z) >= 12){
-				$this->getLevel()->setBlock($this, new Water(), true);
-				return Level::BLOCK_UPDATE_NORMAL;
-			}
+
+	public function getDrops(Item $item) : array {
+		if($item->getEnchantmentLevel(Enchantment::TYPE_MINING_SILK_TOUCH) > 0){
+			return [
+				[Item::ICE, 0, 1],
+			];
+		}else{
+			return [];
 		}
-		return false;
 	}
 }

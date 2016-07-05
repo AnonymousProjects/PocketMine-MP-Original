@@ -2,25 +2,20 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
- * 
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
+ *
  *
 */
 
@@ -28,9 +23,12 @@ namespace pocketmine\level\particle;
 
 use pocketmine\entity\Entity;
 use pocketmine\entity\Item as ItemEntity;
+use pocketmine\item\Item;
 use pocketmine\math\Vector3;
 use pocketmine\network\protocol\AddEntityPacket;
+use pocketmine\network\protocol\AddPlayerPacket;
 use pocketmine\network\protocol\RemoveEntityPacket;
+use pocketmine\utils\UUID;
 
 class FloatingTextParticle extends Particle{
 	//TODO: HACK!
@@ -81,24 +79,25 @@ class FloatingTextParticle extends Particle{
 
 		if(!$this->invisible){
 			
-			$pk = new AddEntityPacket();
+			$pk = new AddPlayerPacket();
 			$pk->eid = $this->entityId;
-			$pk->type = ItemEntity::NETWORK_ID;
+			$pk->uuid = UUID::fromRandom();
 			$pk->x = $this->x;
-			$pk->y = $this->y - 0.75;
+			$pk->y = $this->y - 1.62;
 			$pk->z = $this->z;
 			$pk->speedX = 0;
 			$pk->speedY = 0;
 			$pk->speedZ = 0;
 			$pk->yaw = 0;
 			$pk->pitch = 0;
-			$pk->item = 0;
-			$pk->meta = 0;
+			$pk->item = Item::get(0);
 			$pk->metadata = [
 				Entity::DATA_FLAGS => [Entity::DATA_TYPE_BYTE, 1 << Entity::DATA_FLAG_INVISIBLE],
 				Entity::DATA_NAMETAG => [Entity::DATA_TYPE_STRING, $this->title . ($this->text !== "" ? "\n" . $this->text : "")],
 				Entity::DATA_SHOW_NAMETAG => [Entity::DATA_TYPE_BYTE, 1],
-				Entity::DATA_NO_AI => [Entity::DATA_TYPE_BYTE, 1]
+				Entity::DATA_NO_AI => [Entity::DATA_TYPE_BYTE, 1],
+				Entity::DATA_LEAD_HOLDER => [Entity::DATA_TYPE_LONG, -1],
+				Entity::DATA_LEAD => [Entity::DATA_TYPE_BYTE, 0]
             ];
 
 			$p[] = $pk;

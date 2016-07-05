@@ -1,28 +1,5 @@
 <?php
 
-/*
- *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
- * 
- *
-*/
 
 namespace pocketmine;
 
@@ -46,7 +23,7 @@ class CrashDump{
 	public function __construct(Server $server){
 		$this->time = time();
 		$this->server = $server;
-		$this->path = $this->server->getDataPath() . "CrashDump_" . date("D_M_j-H.i.s-T_Y", $this->time) . ".log";
+		$this->path = $this->server->getCrashPath() . "CrashDump_" . date("D_M_j-H.i.s-T_Y", $this->time) . ".log";
 		$this->fp = @fopen($this->path, "wb");
 		if(!is_resource($this->fp)){
 			throw new \RuntimeException("Could not create Crash Dump");
@@ -60,7 +37,7 @@ class CrashDump{
 
 		$this->extraData();
 
-		$this->encodeData();
+		//$this->encodeData();
 	}
 
 	public function getPath(){
@@ -182,10 +159,11 @@ class CrashDump{
 		$this->addLine("File: " . $error["file"]);
 		$this->addLine("Line: " . $error["line"]);
 		$this->addLine("Type: " . $error["type"]);
-
+		
 		if(strpos($error["file"], "src/pocketmine/") === false and strpos($error["file"], "src/raklib/") === false and file_exists($error["fullFile"])){
 			$this->addLine();
 			$this->addLine("THIS CRASH WAS CAUSED BY A PLUGIN");
+			$this->addLine("此次出错由插件引起");
 			$this->data["plugin"] = true;
 
 			$reflection = new \ReflectionClass(PluginBase::class);
@@ -195,7 +173,7 @@ class CrashDump{
 				$filePath = \pocketmine\cleanPath($file->getValue($plugin));
 				if(strpos($error["file"], $filePath) === 0){
 					$this->data["plugin"] = $plugin->getName();
-					$this->addLine("BAD PLUGIN: " . $plugin->getDescription()->getFullName());
+					$this->addLine("BAD PLUGIN : " . $plugin->getDescription()->getFullName());
 					break;
 				}
 			}
@@ -237,12 +215,15 @@ class CrashDump{
 		$this->data["general"]["zend"] = zend_version();
 		$this->data["general"]["php_os"] = PHP_OS;
 		$this->data["general"]["os"] = Utils::getOS();
-		$this->addLine("PocketMine-MP version: " . $version->get(false) . " #" . $version->getBuild() . " [Protocol " . Info::CURRENT_PROTOCOL . "; API " . API_VERSION . "]");
-		$this->addLine("Git commit: " . GIT_COMMIT);
+		$this->addLine("Genisys version: " . $version->get(false) . " #" . $version->getBuild() . " [Protocol " . Info::CURRENT_PROTOCOL . "; API " . API_VERSION . "]");
 		$this->addLine("uname -a: " . php_uname("a"));
-		$this->addLine("PHP Version: " . phpversion());
+		$this->addLine("PHP version: " . phpversion());
 		$this->addLine("Zend version: " . zend_version());
 		$this->addLine("OS : " . PHP_OS . ", " . Utils::getOS());
+		$this->addLine();
+		$this->addLine("Server uptime: " . $this->server->getUptime());
+		$this->addLine("Number of loaded worlds: " . count($this->server->getLevels()));
+		$this->addLine("Players online: ".count($this->server->getOnlinePlayers())."/".$this->server->getMaxPlayers());
 	}
 
 	public function addLine($line = ""){

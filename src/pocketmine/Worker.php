@@ -2,25 +2,20 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
- * 
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
+ *
  *
 */
 
@@ -33,6 +28,8 @@ abstract class Worker extends \Worker{
 
 	/** @var \ClassLoader */
 	protected $classLoader;
+	
+	protected $isKilled = false;
 
 	public function getClassLoader(){
 		return $this->classLoader;
@@ -56,7 +53,7 @@ abstract class Worker extends \Worker{
 		}
 	}
 
-	public function start($options = PTHREADS_INHERIT_ALL){
+	public function start(int $options = PTHREADS_INHERIT_ALL){
 		ThreadManager::getInstance()->add($this);
 
 		if(!$this->isRunning() and !$this->isJoined() and !$this->isTerminated()){
@@ -73,19 +70,18 @@ abstract class Worker extends \Worker{
 	 * Stops the thread using the best way possible. Try to stop it yourself before calling this.
 	 */
 	public function quit(){
+		$this->isKilled = true;
+
+		$this->notify();
+		
 		if($this->isRunning()){
+			$this->shutdown();
+			$this->notify();
 			$this->unstack();
-			$this->kill();
-			$this->detach();
 		}elseif(!$this->isJoined()){
 			if(!$this->isTerminated()){
 				$this->join();
-			}else{
-				$this->kill();
-				$this->detach();
 			}
-		}else{
-			$this->detach();
 		}
 
 		ThreadManager::getInstance()->remove($this);

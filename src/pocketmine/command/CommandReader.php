@@ -2,54 +2,71 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
- * 
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
+ *
  *
 */
 
 namespace pocketmine\command;
 
 use pocketmine\Thread;
+use pocketmine\utils\MainLogger;
+use pocketmine\utils\Utils;
 
 class CommandReader extends Thread{
 	private $readline;
-
 	/** @var \Threaded */
 	protected $buffer;
+	private $shutdown = false;
+	private $stdin;
+	/** @var MainLogger */
+	private $logger;
 
-	public function __construct(){
-		$this->buffer = \ThreadedFactory::create();
+	public function __construct($logger){
+		$this->stdin = fopen("php://stdin", "r");
+		$opts = getopt("", ["disable-readline"]);
+		if(extension_loaded("readline") && !isset($opts["disable-readline"]) && (!function_exists("posix_isatty") || posix_isatty($this->stdin))){
+			$this->readline = true;
+		}else{
+			$this->readline = false;
+		}
+		$this->logger = $logger;
+		$this->buffer = new \Threaded;
 		$this->start();
+	}
+
+	public function shutdown(){
+		$this->shutdown = true;
+	}
+
+	private function readline_callback($line){
+		if($line !== ""){
+			$this->buffer[] = $line;
+			readline_add_history($line);
+		}
 	}
 
 	private function readLine(){
 		if(!$this->readline){
-			$line = trim(fgets(fopen("php://stdin", "r")));
-		}else{
-			$line = trim(readline("> "));
-			if($line != ""){
-				readline_add_history($line);
+			$line = trim(fgets($this->stdin));
+			if($line !== ""){
+				$this->buffer[] = $line;
 			}
+		}else{
+			readline_callback_read_char();
 		}
-
-		return $line;
 	}
 
 	/**
@@ -65,23 +82,43 @@ class CommandReader extends Thread{
 		return null;
 	}
 
+	public function quit(){
+		$this->shutdown();
+		// Windows sucks
+		if(Utils::getOS() != "win"){
+			parent::quit();
+		}
+	}
+
 	public function run(){
-		$opts = getopt("", ["disable-readline"]);
-		if(extension_loaded("readline") and !isset($opts["disable-readline"])){
-			$this->readline = true;
-		}else{
-			$this->readline = false;
+		if($this->readline){
+			readline_callback_handler_install("Genisys> ", [$this, "readline_callback"]);
+			$this->logger->setConsoleCallback("readline_redisplay");
 		}
 
-		$lastLine = microtime(true);
-		while(true){
-			if(($line = $this->readLine()) !== ""){
-				$this->buffer[] = preg_replace("#\\x1b\\x5b([^\\x1b]*\\x7e|[\\x40-\\x50])#", "", $line);
-			}elseif((microtime(true) - $lastLine) <= 0.1){ //Non blocking! Sleep to save CPU
-				usleep(40000);
+		while(!$this->shutdown){
+			$r = [$this->stdin];
+			$w = null;
+			$e = null;
+			if(stream_select($r, $w, $e, 0, 200000) > 0){
+				// PHP on Windows sucks
+				if(feof($this->stdin)){
+					if(Utils::getOS() == "win"){
+						$this->stdin = fopen("php://stdin", "r");
+						if(!is_resource($this->stdin)){
+							break;
+						}
+					}else{
+						break;
+					}
+				}
+				$this->readLine();
 			}
+		}
 
-			$lastLine = microtime(true);
+		if($this->readline){
+			$this->logger->setConsoleCallback(null);
+			readline_callback_handler_remove();
 		}
 	}
 

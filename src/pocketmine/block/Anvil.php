@@ -24,10 +24,15 @@ namespace pocketmine\block;
 use pocketmine\inventory\AnvilInventory;
 use pocketmine\item\Item;
 use pocketmine\item\Tool;
+use pocketmine\level\sound\AnvilFallSound;
 use pocketmine\Player;
 
 class Anvil extends Fallable{
-
+	
+	const NORMAL = 0;
+	const SLIGHTLY_DAMAGED = 4;
+	const VERY_DAMAGED = 8;
+	
 	protected $id = self::ANVIL;
 
 	public function isSolid(){
@@ -38,11 +43,11 @@ class Anvil extends Fallable{
 		$this->meta = $meta;
 	}
 
-	public function canBeActivated(){
+	public function canBeActivated() : bool {
 		return true;
 	}
 
-	public function getHardness(){
+	public function getHardness() {
 		return 5;
 	}
 
@@ -50,7 +55,7 @@ class Anvil extends Fallable{
 		return 6000;
 	}
 
-	public function getName(){
+	public function getName() : string{
 		return "Anvil";
 	}
 
@@ -59,8 +64,11 @@ class Anvil extends Fallable{
 	}
 
 	public function onActivate(Item $item, Player $player = null){
+		if(!$this->getLevel()->getServer()->anvilEnabled){
+			return true;
+		}
 		if($player instanceof Player){
-			if($player->isCreative()){
+			if($player->isCreative() and $player->getServer()->limitedCreative){
 				return true;
 			}
 
@@ -69,9 +77,14 @@ class Anvil extends Fallable{
 
 		return true;
 	}
+	
+	public function place(Item $item, Block $block, Block $target, $face, $fx, $fy, $fz, Player $player = null){
+		parent::place($item, $block, $target, $face, $fx, $fy, $fz, $player);
+		$this->getLevel()->addSound(new AnvilFallSound($this));
+	}
 
-	public function getDrops(Item $item){
-		if($item->isPickaxe() >= Tool::TIER_WOODEN){
+	public function getDrops(Item $item) : array {
+		if($item->isPickaxe() >= 1){
 			return [
 				[$this->id, 0, 1], //TODO break level
 			];

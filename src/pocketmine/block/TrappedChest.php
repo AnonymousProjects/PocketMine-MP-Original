@@ -2,27 +2,22 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
+ *  _____   _____   __   _   _   _____  __    __  _____
+ * /  ___| | ____| |  \ | | | | /  ___/ \ \  / / /  ___/
+ * | |     | |__   |   \| | | | | |___   \ \/ /  | |___
+ * | |  _  |  __|  | |\   | | | \___  \   \  /   \___  \
+ * | |_| | | |___  | | \  | | |  ___| |   / /     ___| |
+ * \_____/ |_____| |_|  \_| |_| /_____/  /_/     /_____/
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
- * 
+ * @author iTX Technologies
+ * @link https://itxtech.org
  *
-*/
+ */
 
 namespace pocketmine\block;
 
@@ -30,31 +25,49 @@ use pocketmine\item\Item;
 use pocketmine\item\Tool;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\nbt\NBT;
-use pocketmine\nbt\tag\Compound;
-use pocketmine\nbt\tag\Enum;
-use pocketmine\nbt\tag\Int;
-use pocketmine\nbt\tag\String;
+use pocketmine\nbt\tag\CompoundTag;
+use pocketmine\nbt\tag\ListTag;
+use pocketmine\nbt\tag\IntTag;
+use pocketmine\nbt\tag\StringTag;
 use pocketmine\Player;
-use pocketmine\tile\TrappedChest as TileChest;
+use pocketmine\tile\Chest as TileChest;
 use pocketmine\tile\Tile;
 
-class TrappedChest extends Transparent{
-
+class TrappedChest extends RedstoneSource{
 	protected $id = self::TRAPPED_CHEST;
 
 	public function __construct($meta = 0){
 		$this->meta = $meta;
 	}
 
-	public function canBeActivated(){
+	public function getBoundingBox(){
+		if($this->boundingBox === null){
+			$this->boundingBox = $this->recalculateBoundingBox();
+		}
+		return $this->boundingBox;
+	}
+
+	public function isSolid(){
 		return true;
 	}
 
-	public function getHardness(){
+	public function canBeFlowedInto(){
+		return false;
+	}
+
+	public function canBeActivated() : bool {
+		return true;
+	}
+
+	public function getHardness() {
 		return 2.5;
 	}
 
-	public function getName(){
+	public function getResistance(){
+		return $this->getHardness() * 5;
+	}
+
+	public function getName() : string{
 		return "Trapped Chest";
 	}
 
@@ -62,23 +75,23 @@ class TrappedChest extends Transparent{
 		return Tool::TYPE_AXE;
 	}
 
-	protected function recalculateBoundingBox(){
+	protected function recalculateBoundingBox() {
 		return new AxisAlignedBB(
-			$this->x + 0.0625,
-			$this->y,
-			$this->z + 0.0625,
-			$this->x + 0.9375,
-			$this->y + 0.9475,
-			$this->z + 0.9375
+				$this->x + 0.0625,
+				$this->y,
+				$this->z + 0.0625,
+				$this->x + 0.9375,
+				$this->y + 0.9475,
+				$this->z + 0.9375
 		);
 	}
 
 	public function place(Item $item, Block $block, Block $target, $face, $fx, $fy, $fz, Player $player = null){
 		$faces = [
-			0 => 4,
-			1 => 2,
-			2 => 5,
-			3 => 3,
+				0 => 4,
+				1 => 2,
+				2 => 5,
+				3 => 3,
 		];
 
 		$chest = null;
@@ -101,17 +114,17 @@ class TrappedChest extends Transparent{
 		}
 
 		$this->getLevel()->setBlock($block, $this, true, true);
-		$nbt = new Compound("", [
-			new Enum("Items", []),
-			new String("id", Tile::TRAPPED_CHEST),
-			new Int("x", $this->x),
-			new Int("y", $this->y),
-			new Int("z", $this->z)
+		$nbt = new CompoundTag("", [
+				new ListTag("Items", []),
+				new StringTag("id", Tile::CHEST),
+				new IntTag("x", $this->x),
+				new IntTag("y", $this->y),
+				new IntTag("z", $this->z)
 		]);
 		$nbt->Items->setTagType(NBT::TAG_Compound);
 
 		if($item->hasCustomName()){
-			$nbt->CustomName = new String("CustomName", $item->getCustomName());
+			$nbt->CustomName = new StringTag("CustomName", $item->getCustomName());
 		}
 
 		if($item->hasCustomBlockData()){
@@ -120,7 +133,7 @@ class TrappedChest extends Transparent{
 			}
 		}
 
-		$tile = Tile::createTile("Trapped Chest", $this->getLevel()->getChunk($this->x >> 4, $this->z >> 4), $nbt);
+		$tile = Tile::createTile("Chest", $this->getLevel()->getChunk($this->x >> 4, $this->z >> 4), $nbt);
 
 		if($chest instanceof TileChest and $tile instanceof TileChest){
 			$chest->pairWith($tile);
@@ -152,38 +165,35 @@ class TrappedChest extends Transparent{
 			if($t instanceof TileChest){
 				$chest = $t;
 			}else{
-				$nbt = new Compound("", [
-					new Enum("Items", []),
-					new String("id", Tile::TRAPPED_CHEST),
-					new Int("x", $this->x),
-					new Int("y", $this->y),
-					new Int("z", $this->z)
+				$nbt = new CompoundTag("", [
+						new ListTag("Items", []),
+						new StringTag("id", Tile::CHEST),
+						new IntTag("x", $this->x),
+						new IntTag("y", $this->y),
+						new IntTag("z", $this->z)
 				]);
 				$nbt->Items->setTagType(NBT::TAG_Compound);
-				$chest = Tile::createTile("Trapped Chest", $this->getLevel()->getChunk($this->x >> 4, $this->z >> 4), $nbt);
+				$chest = Tile::createTile("Chest", $this->getLevel()->getChunk($this->x >> 4, $this->z >> 4), $nbt);
 			}
 
-			if(isset($chest->namedtag->Lock) and $chest->namedtag->Lock instanceof String){
+			if(isset($chest->namedtag->Lock) and $chest->namedtag->Lock instanceof StringTag){
 				if($chest->namedtag->Lock->getValue() !== $item->getCustomName()){
 					return true;
 				}
 			}
 
-			if($player->isCreative()){
+			if($player->isCreative() and $player->getServer()->limitedCreative){
 				return true;
 			}
-			
-			if($chest !== null){
-				$player->addWindow($chest->getInventory());
-			}
+			$player->addWindow($chest->getInventory());
 		}
 
 		return true;
 	}
 
-	public function getDrops(Item $item){
+	public function getDrops(Item $item) : array {
 		return [
-			[$this->id, 0, 1],
+				[$this->id, 0, 1],
 		];
 	}
 }

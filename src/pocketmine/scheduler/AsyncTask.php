@@ -2,25 +2,20 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
- * 
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
+ *
  *
 */
 
@@ -33,7 +28,7 @@ use pocketmine\Server;
  *
  * WARNING: Do not call PocketMine-MP API methods, or save objects from/on other Threads!!
  */
-abstract class AsyncTask extends \Collectable{
+abstract class AsyncTask extends \Threaded implements \Collectable{
 
 	/** @var AsyncWorker $worker */
 	public $worker = null;
@@ -44,23 +39,43 @@ abstract class AsyncTask extends \Collectable{
 	/** @var int */
 	private $taskId = null;
 
-	public function run(){
-		$this->result = null;
+	private $crashed = false;
 
-		if($this->cancelRun !== true){
-			$this->onRun();
-		}
+	private $isGarbage = false;
 
-		$this->setGarbage();
+	private $isFinished = false;
+
+	public function isGarbage() : bool{
+		return $this->isGarbage;
 	}
 
-	/**
-	 * @deprecated
-	 *
-	 * @return bool
-	 */
-	public function isFinished(){
-		return $this->isGarbage();
+	public function setGarbage(){
+		$this->isGarbage = true;
+	}
+
+	public function isFinished() : bool{
+		return $this->isFinished;
+	}
+
+	public function run(){
+		$this->result = null;
+		$this->isGarbage = false;
+
+		if($this->cancelRun !== true){
+			try{
+				$this->onRun();
+			}catch(\Throwable $e){
+				$this->crashed = true;
+				$this->worker->handleException($e);
+			}
+		}
+
+		$this->isFinished = true;
+		//$this->setGarbage();
+	}
+
+	public function isCrashed(){
+		return $this->crashed;
 	}
 
 	/**
@@ -149,7 +164,9 @@ abstract class AsyncTask extends \Collectable{
 
 	public function cleanObject(){
 		foreach($this as $p => $v){
-			$this->{$p} = null;
+			if(!($v instanceof \Threaded) and !in_array($p, ["isFinished", "isGarbage", "cancelRun"])){
+				$this->{$p} = null;
+			}
 		}
 	}
 

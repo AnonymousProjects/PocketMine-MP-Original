@@ -2,25 +2,20 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
- * 
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
+ *
  *
 */
 
@@ -29,7 +24,8 @@ namespace pocketmine\item;
 
 use pocketmine\block\Block;
 use pocketmine\entity\Entity;
-use pocketmine\nbt\tag\Byte;
+use pocketmine\nbt\tag\ByteTag;
+use pocketmine\item\enchantment\enchantment;
 
 abstract class Tool extends Item{
 	const TIER_WOODEN = 1;
@@ -49,7 +45,7 @@ abstract class Tool extends Item{
 		parent::__construct($id, $meta, $count, $name);
 	}
 
-	public function getMaxStackSize(){
+	public function getMaxStackSize() : int {
 		return 1;
 	}
 
@@ -57,36 +53,56 @@ abstract class Tool extends Item{
 	 * TODO: Move this to each item
 	 *
 	 * @param Entity|Block $object
+	 * @param 1 for break|2 for Touch $type
 	 *
 	 * @return bool
 	 */
-	public function useOn($object){
+	public function useOn($object, $type = 1)
+	{
 		if($this->isUnbreakable()){
 			return true;
 		}
 
-		if($object instanceof Block){
-			if(
-				$object->getToolType() === Tool::TYPE_PICKAXE and $this->isPickaxe() or
-				$object->getToolType() === Tool::TYPE_SHOVEL and $this->isShovel() or
-				$object->getToolType() === Tool::TYPE_AXE and $this->isAxe() or
-				$object->getToolType() === Tool::TYPE_SWORD and $this->isSword() or
-				$object->getToolType() === Tool::TYPE_SHEARS and $this->isShears()
-			){
-				$this->meta++;
-			}elseif(!$this->isShears() and $object->getBreakTime($this) > 0){
-				$this->meta += 2;
-			}
-		}elseif($this->isHoe()){
-			if(($object instanceof Block) and ($object->getId() === self::GRASS or $object->getId() === self::DIRT)){
-				$this->meta++;
-			}
-		}elseif(($object instanceof Entity) and !$this->isSword()){
-			$this->meta += 2;
-		}else{
-			$this->meta++;
+		$unbreakingl = $this->getEnchantmentLevel(Enchantment::TYPE_MINING_DURABILITY);
+		$unbreakingl = $unbreakingl > 3 ? 3 : $unbreakingl;
+		if (mt_rand(1, $unbreakingl + 1) !== 1) {
+			return true;
 		}
 
+		if ($type === 1) {
+			if ($object instanceof Entity) {
+				if ($this->isHoe() !== false or $this->isSword() !== false) {
+					//Hoe and Sword
+					$this->meta++;
+					return true;
+				} elseif ($this->isPickaxe() !== false or $this->isAxe() !== false or $this->isShovel() !== false) {
+					//Pickaxe Axe and Shovel
+					$this->meta += 2;
+					return true;
+				}
+				return true;//Other tool do not lost durability white hitting
+			} elseif ($object instanceof Block) {
+				if ($this->isShears() !== false) {
+					if ($object->getToolType() === Tool::TYPE_SHEARS) {//This should be checked in each block
+						$this->meta++;
+					}
+					return true;
+				} elseif ($object->getHardness() > 0) {//Sword Pickaxe Axe and Shovel
+					if ($this->isSword() !== false) {
+						$this->meta += 2;
+						return true;
+					} elseif ($this->isPickaxe() !== false or $this->isAxe() !== false or $this->isShovel() !== false) {
+						$this->meta += 1;
+						return true;
+					}
+				}
+			}
+		} elseif ($type === 2) {//For Touch. only trigger when OnActivate return true
+			if ($this->isHoe() !== false or $this->id === self::FLINT_STEEL or $this->isShovel() !== false) {
+				$this->meta++;
+				return true;
+			}
+		}
 		return true;
 	}
 
@@ -153,10 +169,6 @@ abstract class Tool extends Item{
 	}
 
 	public function isTool(){
-		return ($this->id === self::FLINT_STEEL or $this->id === self::SHEARS or $this->id === self::BOW or $this->isPickaxe() !== false or $this->isAxe() !== false or $this->isShovel() !== false or $this->isSword() !== false);
-	}
-	
-	public function getDamageStep($target){
-		return 1;
+		return ($this->id === self::FLINT_STEEL or $this->id === self::SHEARS or $this->id === self::BOW or $this->isPickaxe() !== false or $this->isAxe() !== false or $this->isShovel() !== false or $this->isSword() !== false or $this->isHoe() !== false);
 	}
 }

@@ -1,0 +1,174 @@
+#PocketMine-MO システム詳細設定
+
+#この設定のバージョン
+config:
+ version: 17
+
+level:
+ #天候システムを有効化
+ weather: true
+ #天候の続く長さ(ランダム)の最低値と最高値
+ weather-random-duration-min: 6000
+ weather-random-duration-max: 12000
+ #雷の落ちる間隔
+ #デフォルト: 10秒 / 0: 無効
+ lightning-time: 200
+ #雷が落ちたときに付く炎
+ lightning-fire: false
+ #炎の広がり
+ fire-spread: false
+
+player:
+ #空腹システムの有効化
+ hunger: true
+ #空腹を使用して体力を回復させるタイミング(体力値で入力)
+ hunger-health: 10
+ #空腹度が減る間隔
+ #20: 1秒 / 80: 4秒
+ hunger-timer: 3000
+ #経験値システムの有効化
+ experience: true
+ #プレイヤー死亡時のインベントリ保存
+ keep-inventory: false
+ #インベントリのスロット数(Windows10版ではバグが発生します)
+ inventory-num: 36
+ #ゲームモード変更時にインベントリを空にする
+ auto-clear-inventory : true
+ #プレイヤー死亡時の経験値保存
+ keep-experience: false
+ #サーバーにプレイヤーが入ったときにクラッシュする場合、10以下に設定してください
+ #-1で無効化
+ chunk-radius: -1
+
+nether:
+ #ネザーを有効化
+ allow-nether: true
+ #ネザーで使用するワールドの名前を設定
+ level-name: "nether"
+
+server:
+ #経験値を事前に生成する量を設定
+ #0で無効化
+ experience-cache: 65535
+ #アイアンゴーレムの有効化
+ allow-iron-golem: false
+ #スノーゴーレムの有効化
+ allow-snow-golem: false
+ #サーバーのログを無効化
+ disable-log: false
+ #非行を検知してkickする
+ anti-fly: true
+ #チャンク生成の要求
+ async-chunk-request: true
+ #プレイヤー参加時のメッセージタイプ
+ #0: チャットメッセージ / 1: Tip / 2: Popup
+ player-msg-type: 0
+ #メッセージ内容
+ #@player: 参加プレイヤー名
+ login-msg: "§e@playerがゲームに参加しました"
+ logout-msg: "§e@playerが退出しました"
+ #jsonファイルからレシピを読み込む
+ recipes-from-json: false
+ #jsonファイルからクリエイティブインベントリを読み込む
+ creative-items-from-json: false
+ #トロッコの動作設定
+ #-1: 動作しない / 0: 自由に動く / 1: レールに沿って動く
+ minecart-moving-type: 0
+ #動作チェックを行いロールバックをする
+ check-movement: true
+ #クリエイティブの制限
+ limited-creative: false
+ #ブロック破壊時のパーティクル表示
+ destroy-block-particle: true
+ #スプラッシュポーションの有効化
+ allow-splash-potion: true
+ #システムコマンドの使用
+ advanced-command-selector: false
+
+enchantment:
+ #金床の有効化
+ enable-anvil: true
+ #エンチャントテーブルの有効化
+ enable-enchanting-table: true
+ #本棚の数によってエンチャントレベルを指定
+ #falseにした場合、ランダムになります
+ count-bookshelf: false
+
+redstone:
+ ##########################################
+ ###レッドストーン回路の設定###
+ ##########################################
+ #これを有効化しない限り回路は動作しません#
+ ##########################################
+ enable: false
+ frequency-pulse: false
+ pulse-frequency: 1
+
+synapse:
+ #synapse APIを有効化
+ enabled: false
+ server-ip: 127.0.0.1
+ server-port: 10305
+ #このサーバーをメインにする
+ is-main-server: true
+ #パスワード
+ server-password: 32bitlongkey
+ #サーバーの説明
+ description: "A Synapse client"
+ #Disable RakLib means that players can only join via Synapse
+ disable-rak: false
+
+dserver:
+ #The count of all multi-server unified
+ enable: false
+ #Query update automatically
+ query-auto-update: false
+ #Query update periodical
+ query-tick-update: true
+ #The max players' number of Motd
+ motd-max-players: 0
+ #The max players' number of query，0=Default
+ query-max-players: 0
+ #Show the number of all players on motd
+ motd-all-players: false
+ #Show the number of all players on Query
+ query-all-players: false
+ #Show the number of online players on motd
+ motd-players: false
+ #Show the number of online players on Query
+ query-players: false
+ #Update Frequency ,20=1s
+ time: 40
+ #Auto-retry times when failed
+ retry-times: 3
+ #the server list，Separate by ';'，e.g. 1.example.com:19132;2.example.com:19133
+ server-list: ""
+
+ai:
+ #AI設定
+ enable: false
+ #ゾンビのAI
+ #0: 無効 / 1: AI v1.0 / 2: 新AI(不安定)
+ zombie: 1
+ #ゾンビ ピッグマンのAI
+ pigzombie: true
+ #牛(ムーシュルーム)のAI
+ cow: true
+ #鶏のAI
+ chicken: true
+ #羊のAI
+ sheep: true
+ #豚のAI
+ pig: true
+ #スケルトンのAI
+ skeleton: true
+ #クリーパーのAI
+ creeper: true
+ #アイアンゴーレムのAI
+ iron-golem: true
+ #スノーゴーレムのAI
+ snow-golem: true
+ #クリーパー爆発時のブロック破壊
+ creeper-explode-destroy-block: false
+ #MOBの自動生成
+ mobgenerate: false

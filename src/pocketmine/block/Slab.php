@@ -2,24 +2,19 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____  
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \ 
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/ 
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_| 
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
  * 
  *
 */
@@ -32,6 +27,7 @@ use pocketmine\math\AxisAlignedBB;
 use pocketmine\Player;
 
 class Slab extends Transparent{
+	
 	const STONE = 0;
 	const SANDSTONE = 1;
 	const WOODEN = 2;
@@ -47,25 +43,41 @@ class Slab extends Transparent{
 		$this->meta = $meta;
 	}
 
-	public function getHardness(){
+	public function getHardness() {
 		return 2;
 	}
 
-	public function getName(){
+	public function getName() : string{
 		static $names = [
-			self::STONE => "Stone",
-			self::SANDSTONE => "Sandstone",
-			self::WOODEN => "Wooden",
-			self::COBBLESTONE => "Cobblestone",
-			self::BRICK => "Brick",
-			self::STONE_BRICK => "Stone Brick",
-			self::QUARTZ => "Quartz",
-			self::NETHER_BRICK => "Nether Brick",
+			0 => "Stone",
+			1 => "Sandstone",
+			2 => "Wooden",
+			3 => "Cobblestone",
+			4 => "Brick",
+			5 => "Stone Brick",
+			6 => "Quartz",
+			7 => "",
 		];
 		return (($this->meta & 0x08) > 0 ? "Upper " : "") . $names[$this->meta & 0x07] . " Slab";
 	}
 
-	protected function recalculateBoundingBox(){
+	public function getBurnChance() : int{
+		$type = $this->meta & 0x07;
+		if($type == self::WOODEN){
+			return 5;
+		}
+		return 0;
+	}
+
+	public function getBurnAbility() : int{
+		$type = $this->meta & 0x07;
+		if($type == self::WOODEN){
+			return 5;
+		}
+		return 0;
+	}
+
+	protected function recalculateBoundingBox() {
 
 		if(($this->meta & 0x08) > 0){
 			return new AxisAlignedBB(
@@ -137,8 +149,8 @@ class Slab extends Transparent{
 		return true;
 	}
 
-	public function getDrops(Item $item){
-		if($item->isPickaxe() >= Tool::TIER_WOODEN){
+	public function getDrops(Item $item) : array {
+		if($item->isPickaxe() >= 1){
 			return [
 				[$this->id, $this->meta & 0x07, 1],
 			];

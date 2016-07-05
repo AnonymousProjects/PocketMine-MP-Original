@@ -2,42 +2,38 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____  
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \ 
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/ 
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_| 
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
  * 
  *
 */
 
 namespace pocketmine\entity;
 
-
+use pocketmine\block\Anvil;
 use pocketmine\block\Block;
-
 use pocketmine\block\Liquid;
+use pocketmine\block\SnowLayer;
 use pocketmine\event\entity\EntityBlockChangeEvent;
+use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
 
 use pocketmine\item\Item as ItemItem;
+use pocketmine\level\sound\AnvilFallSound;
 use pocketmine\math\Vector3;
-use pocketmine\nbt\tag\Byte;
-use pocketmine\nbt\tag\Int;
-use pocketmine\network\Network;
+use pocketmine\nbt\tag\ByteTag;
+use pocketmine\nbt\tag\IntTag;
 use pocketmine\network\protocol\AddEntityPacket;
 use pocketmine\Player;
 
@@ -63,7 +59,7 @@ class FallingSand extends Entity{
 			$this->blockId = $this->namedtag["TileID"];
 		}elseif(isset($this->namedtag->Tile)){
 			$this->blockId = $this->namedtag["Tile"];
-			$this->namedtag["TileID"] = new Int("TileID", $this->blockId);
+			$this->namedtag["TileID"] = new IntTag("TileID", $this->blockId);
 		}
 
 		if(isset($this->namedtag->Data)){
@@ -103,6 +99,8 @@ class FallingSand extends Entity{
 
 		$this->lastUpdate = $currentTick;
 
+		$height = $this->fallDistance;
+
 		$hasUpdate = $this->entityBaseTick($tickDiff);
 
 		if($this->isAlive()){
@@ -111,7 +109,6 @@ class FallingSand extends Entity{
 			if($this->ticksLived === 1){
 				$block = $this->level->getBlock($pos);
 				if($block->getId() !== $this->blockId){
-					$this->kill();
 					return true;
 				}
 				$this->level->setBlock($pos, Block::get(0), true);
@@ -127,7 +124,7 @@ class FallingSand extends Entity{
 			$this->motionY *= 1 - $this->drag;
 			$this->motionZ *= $friction;
 
-			$pos = (new Vector3($this->x - 0.5, $this->y, $this->z - 0.5))->floor();
+			$pos = (new Vector3($this->x - 0.5, $this->y, $this->z - 0.5))->round();
 
 			if($this->onGround){
 				$this->kill();
@@ -135,9 +132,32 @@ class FallingSand extends Entity{
 				if($block->getId() > 0 and !$block->isSolid() and !($block instanceof Liquid)){
 					$this->getLevel()->dropItem($this, ItemItem::get($this->getBlock(), $this->getDamage(), 1));
 				}else{
-					$this->server->getPluginManager()->callEvent($ev = new EntityBlockChangeEvent($this, $block, Block::get($this->getBlock(), $this->getDamage())));
+					if($block instanceof SnowLayer){
+						$oldDamage = $block->getDamage();
+						$this->server->getPluginManager()->callEvent($ev = new EntityBlockChangeEvent($this, $block, Block::get($this->getBlock(), $this->getDamage() + $oldDamage)));
+					}else{
+						$this->server->getPluginManager()->callEvent($ev = new EntityBlockChangeEvent($this, $block, Block::get($this->getBlock(), $this->getDamage())));
+					}
+
 					if(!$ev->isCancelled()){
 						$this->getLevel()->setBlock($pos, $ev->getTo(), true);
+						if($ev->getTo() instanceof Anvil){
+							$sound = new AnvilFallSound($this);
+							$this->getLevel()->addSound($sound);
+							foreach($this->level->getNearbyEntities($this->boundingBox->grow(0.1, 0.1, 0.1), $this) as $entity){
+								$entity->scheduleUpdate();
+								if(!$entity->isAlive()){
+									continue;
+								}
+								if($entity instanceof Living){
+									$damage = ($height - 1) * 2;
+									if($damage > 40) $damage = 40;
+									$ev = new EntityDamageByEntityEvent($this, $entity, EntityDamageByEntityEvent::CAUSE_FALL, $damage, 0.1);
+									$entity->attack($damage, $ev);
+								}
+							}
+
+						}
 					}
 				}
 				$hasUpdate = true;
@@ -158,8 +178,8 @@ class FallingSand extends Entity{
 	}
 
 	public function saveNBT(){
-		$this->namedtag->TileID = new Int("TileID", $this->blockId);
-		$this->namedtag->Data = new Byte("Data", $this->damage);
+		$this->namedtag->TileID = new IntTag("TileID", $this->blockId);
+		$this->namedtag->Data = new ByteTag("Data", $this->damage);
 	}
 
 	public function spawnTo(Player $player){

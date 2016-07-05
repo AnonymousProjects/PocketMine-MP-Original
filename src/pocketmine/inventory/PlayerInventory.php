@@ -2,25 +2,20 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
- * 
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
+ *
  *
 */
 
@@ -31,7 +26,6 @@ use pocketmine\event\entity\EntityArmorChangeEvent;
 use pocketmine\event\entity\EntityInventoryChangeEvent;
 use pocketmine\event\player\PlayerItemHeldEvent;
 use pocketmine\item\Item;
-use pocketmine\network\Network;
 use pocketmine\network\protocol\ContainerSetContentPacket;
 use pocketmine\network\protocol\ContainerSetSlotPacket;
 use pocketmine\network\protocol\MobArmorEquipmentPacket;
@@ -65,6 +59,14 @@ class PlayerInventory extends BaseInventory{
 
 	public function setHotbarSlotIndex($index, $slot){
 		if($index >= 0 and $index < $this->getHotbarSize() and $slot >= -1 and $slot < $this->getSize()){
+			for($i = 0; $i < $this->getHotbarSize(); ++$i){
+				$index2 = $this->getHotbarSlotIndex($i);
+				if($index2 == $slot and $slot != -1){
+					$this->hotbar[$i] = $this->getHotbarSlotIndex($index);
+					break;
+				}
+			};
+
 			$this->hotbar[$index] = $slot;
 		}
 	}
@@ -76,12 +78,13 @@ class PlayerInventory extends BaseInventory{
 	public function setHeldItemIndex($index){
 		if($index >= 0 and $index < $this->getHotbarSize()){
 			$this->itemInHandIndex = $index;
-
+			/*
 			if($this->getHolder() instanceof Player){
 				$this->sendHeldItem($this->getHolder());
 			}
 
 			$this->sendHeldItem($this->getHolder()->getViewers());
+			*/
 		}
 	}
 
@@ -122,6 +125,7 @@ class PlayerInventory extends BaseInventory{
 			}
 
 			$this->setHotbarSlotIndex($itemIndex, $slot);
+			$this->sendHeldItem($this->getHolder()->getViewers());
 		}
 	}
 
@@ -155,7 +159,7 @@ class PlayerInventory extends BaseInventory{
 
 	public function onSlotChange($index, $before){
 		$holder = $this->getHolder();
-		if($holder instanceof Player and !$holder->spawned){
+		if(!$holder instanceof Player or !$holder->spawned){
 			return;
 		}
 
@@ -164,6 +168,10 @@ class PlayerInventory extends BaseInventory{
 		if($index >= $this->getSize()){
 			$this->sendArmorSlot($index, $this->getViewers());
 			$this->sendArmorSlot($index, $this->getHolder()->getViewers());
+		}else{
+			if(!$holder->getServer()->limitedCreative or $holder->isSurvival()){
+				$this->sendContents($holder);
+			}
 		}
 	}
 
@@ -315,7 +323,6 @@ class PlayerInventory extends BaseInventory{
 		$pk->eid = $this->getHolder()->getId();
 		$pk->slots = $armor;
 		$pk->encode();
-		$pk;
 		$pk->isEncoded = true;
 
 		foreach($target as $player){
@@ -389,19 +396,21 @@ class PlayerInventory extends BaseInventory{
 
 		$pk = new ContainerSetContentPacket();
 		$pk->slots = [];
-		$holder = $this->getHolder();
-		if($holder instanceof Player and $holder->isCreative()){
-			// mwvent - return because this packet causes problems - TODO: why?
-			return;
-			//TODO: Remove this workaround because of broken client
-			foreach(Item::getCreativeItems() as $i => $item){
-				$pk->slots[$i] = Item::getCreativeItem($i);
+		for($i = 0; $i < $this->getSize(); ++$i){ //Do not send armor by error here
+			$pk->slots[$i] = $this->getItem($i);
+		}
+		/*if($holder instanceof Player and $holder->isCreative()){
+			for($current = 0; $current < $this->getSize(); ++$current){
+				$pk->slots[$current] = $this->getItem($current);
 			}
+			/*foreach(Item::getCreativeItems() as $i => $item){
+				$pk->slots[$i + $current] = Item::getCreativeItem($i);
+			}*
 		}else{
 			for($i = 0; $i < $this->getSize(); ++$i){ //Do not send armor by error here
 				$pk->slots[$i] = $this->getItem($i);
 			}
-		}
+		}*/
 
 		foreach($target as $player){
 			$pk->hotbar = [];
@@ -430,6 +439,11 @@ class PlayerInventory extends BaseInventory{
 		}
 
 		$pk = new ContainerSetSlotPacket();
+		$pk->hotbar = [];
+		for($i = 0; $i < $this->getHotbarSize(); ++$i){
+			$index = $this->getHotbarSlotIndex($i);
+			$pk->hotbar[] = $index <= -1 ? -1 : $index + 9;
+		}
 		$pk->slot = $index;
 		$pk->item = clone $this->getItem($index);
 

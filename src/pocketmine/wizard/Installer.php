@@ -2,24 +2,19 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____  
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \ 
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/ 
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_| 
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
  * 
  *
 */
@@ -36,25 +31,28 @@ use pocketmine\utils\Utils;
 class Installer{
 	const DEFAULT_NAME = "Minecraft: PE Server";
 	const DEFAULT_PORT = 19132;
-	const DEFAULT_MEMORY = 256;
+	const DEFAULT_MEMORY = 512;
 	const DEFAULT_PLAYERS = 20;
 	const DEFAULT_GAMEMODE = 0;
+	const DEFAULT_LEVEL_NAME = "world";
+	const DEFAULT_LEVEL_TYPE = "DEFAULT";
 
-	private $lang;
+	private $defaultLang;
 
 	public function __construct(){
-		echo "[*] PocketMine-MP set-up wizard\n";
+		echo "[*] Genisys set-up wizard\n";
 		echo "[*] Please select a language:\n";
 		foreach(InstallerLang::$languages as $short => $native){
 			echo " $native => $short\n";
 		}
 		do{
-			echo "[?] Language (en): ";
-			$lang = strtolower($this->getInput("en"));
+			echo "[?] Language (eng): ";
+			$lang = strtolower($this->getInput("eng"));
 			if(!isset(InstallerLang::$languages[$lang])){
 				echo "[!] Couldn't find the language\n";
 				$lang = false;
 			}
+			$this->defaultLang = $lang;
 		}while($lang == false);
 		$this->lang = new InstallerLang($lang);
 
@@ -62,7 +60,7 @@ class Installer{
 		echo "[*] " . $this->lang->language_has_been_selected . "\n";
 
 		if(!$this->showLicense()){
-			\pocketmine\kill(getmypid());
+			@\pocketmine\kill(getmypid());
 			exit(-1);
 		}
 
@@ -78,6 +76,10 @@ class Installer{
 		$this->networkFunctions();
 
 		$this->endWizard();
+	}
+
+	public function getDefaultLang(){
+		return $this->defaultLang;
 	}
 
 	private function showLicense(){
@@ -112,6 +114,7 @@ LICENSE;
 		$config = new Config(\pocketmine\DATA . "server.properties", Config::PROPERTIES);
 		echo "[?] " . $this->lang->name_your_server . " (" . self::DEFAULT_NAME . "): ";
 		$config->set("server-name", $this->getInput(self::DEFAULT_NAME));
+		$config->set("motd", $this->getInput(self::DEFAULT_NAME));
 		echo "[*] " . $this->lang->port_warning . "\n";
 		do{
 			echo "[?] " . $this->lang->server_port . " (" . self::DEFAULT_PORT . "): ";
@@ -121,6 +124,19 @@ LICENSE;
 			}
 		}while($port <= 0 or $port > 65535);
 		$config->set("server-port", $port);
+		
+		echo "[?] " . $this->lang->level_name . " (" . self::DEFAULT_LEVEL_NAME . "): ";
+		$config->set("level-name", $this->getInput(self::DEFAULT_LEVEL_NAME));
+		
+		do{
+			echo "[?] " . $this->lang->level_type . " (" . self::DEFAULT_LEVEL_TYPE . "): ";
+			$type = (string) $this->getInput(self::DEFAULT_LEVEL_TYPE);
+			if($type != "flat" or $type != "default"){
+				echo "[!] " . $this->lang->invalid_level_type . "\n";
+			}
+		}while($type == "flat" or $type == "default");
+		$config->set("level-type", $type);
+		
 		/*echo "[*] " . $this->lang->ram_warning . "\n";
 		echo "[?] " . $this->lang->server_ram . " (" . self::DEFAULT_MEMORY . "): ";
 		$config->set("memory-limit", ((int) $this->getInput(self::DEFAULT_MEMORY)) . "M");*/
@@ -138,6 +154,13 @@ LICENSE;
 			$config->set("spawn-protection", -1);
 		}else{
 			$config->set("spawn-protection", 16);
+		}
+		
+		echo "[?] " . $this->lang->announce_player_achievements . " (y/N): ";
+		if(strtolower($this->getInput("n")) === "y"){
+			$config->set("announce-player-achievements", "on");
+		}else{
+			$config->set("announce-player-achievements", "off");
 		}
 		$config->save();
 	}

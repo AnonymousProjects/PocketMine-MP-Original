@@ -2,151 +2,163 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
+ *  _____   _____   __   _   _   _____  __    __  _____
+ * /  ___| | ____| |  \ | | | | /  ___/ \ \  / / /  ___/
+ * | |     | |__   |   \| | | | | |___   \ \/ /  | |___
+ * | |  _  |  __|  | |\   | | | \___  \   \  /   \___  \
+ * | |_| | | |___  | | \  | | |  ___| |   / /     ___| |
+ * \_____/ |_____| |_|  \_| |_| /_____/  /_/     /_____/
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
- * 
+ * @author iTX Technologies
+ * @link https://itxtech.org
  *
-*/
+ */
 
 namespace pocketmine\block;
 
 use pocketmine\item\Item;
 use pocketmine\level\Level;
-use pocketmine\Player;
+use pocketmine\level\sound\ButtonClickSound;
 use pocketmine\math\Vector3;
-use pocketmine\level\sound\ClickSound;
+use pocketmine\Player;
 
-class WoodenButton extends Flowable implements Redstone{
-	
+class WoodenButton extends RedstoneSource{
 	protected $id = self::WOODEN_BUTTON;
 
 	public function __construct($meta = 0){
 		$this->meta = $meta;
 	}
 
-	public function getName(){
+	public function onUpdate($type){
+		if($type == Level::BLOCK_UPDATE_SCHEDULED){
+			if($this->isActivated()) {
+				$this->meta ^= 0x08;
+				$this->getLevel()->setBlock($this, $this, true, false);
+				$this->getLevel()->addSound(new ButtonClickSound($this));
+				$this->deactivate();
+			}
+			return Level::BLOCK_UPDATE_SCHEDULED;
+		}
+		if($type === Level::BLOCK_UPDATE_NORMAL){
+			$side = $this->getDamage();
+			if($this->isActivated()) $side ^= 0x08;
+			$faces = [
+				0 => 1,
+				1 => 0,
+				2 => 3,
+				3 => 2,
+				4 => 5,
+				5 => 4,
+			];
+
+			if($this->getSide($faces[$side]) instanceof Transparent){
+				$this->getLevel()->useBreakOn($this);
+
+				return Level::BLOCK_UPDATE_NORMAL;
+			}
+		}
+		return false;
+	}
+
+	public function deactivate(array $ignore = []){
+		parent::deactivate($ignore = []);
+		$faces = [
+			0 => 1,
+			1 => 0,
+			2 => 3,
+			3 => 2,
+			4 => 5,
+			5 => 4,
+		];
+		$side = $this->meta;
+		if($this->isActivated()) $side ^= 0x08;
+
+		$block = $this->getSide($faces[$side])->getSide(Vector3::SIDE_UP);
+		if(!$this->equals($block)){
+			$this->deactivateBlock($block);
+		}
+
+		if($side != 1){
+			$this->deactivateBlock($this->getSide($faces[$side], 2));
+		}
+
+		$this->checkTorchOff($this->getSide($faces[$side]),[$this->getOppositeSide($faces[$side])]);
+	}
+
+	public function activate(array $ignore = []){
+		parent::activate($ignore = []);
+		$faces = [
+				0 => 1,
+				1 => 0,
+				2 => 3,
+				3 => 2,
+				4 => 5,
+				5 => 4,
+		];
+		
+		$side = $this->meta;
+		if($this->isActivated()) $side ^= 0x08;
+
+		$block = $this->getSide($faces[$side])->getSide(Vector3::SIDE_UP);
+		if(!$this->equals($block)){
+			$this->activateBlock($block);
+		}
+
+		if($side != 1){
+			$block = $this->getSide($faces[$side], 2);
+			$this->activateBlock($block);
+		}
+
+		$this->checkTorchOn($this->getSide($faces[$side]),[$this->getOppositeSide($faces[$side])]);
+	}
+
+	public function getName() : string{
 		return "Wooden Button";
 	}
 
-	public function getHardness(){
+	public function getHardness() {
 		return 0.5;
 	}
 
-	public function onUpdate($type){
-		if($type === Level::BLOCK_UPDATE_SCHEDULED){
-			$this->togglePowered();
-			return Level::BLOCK_UPDATE_SCHEDULED;
+	public function onBreak(Item $item){
+		if($this->isActivated()){
+			$this->meta ^= 0x08;
+			$this->getLevel()->setBlock($this, $this, true, false);
+			$this->deactivate();
 		}
-		return false;
+		$this->getLevel()->setBlock($this, new Air(), true, false);
 	}
 
 	public function place(Item $item, Block $block, Block $target, $face, $fx, $fy, $fz, Player $player = null){
 		if($target->isTransparent() === false){
-			$this->meta=$face;
-			$this->getLevel()->setBlock($block, $this, true, true);
-			
+			$this->meta = $face;
+			$this->getLevel()->setBlock($block, $this, true, false);
 			return true;
 		}
-		
 		return false;
 	}
 
-	public function onActivate(Item $item, Player $player = null){
-		if(($player instanceof Player && !$player->isSneaking())||$player===null){
-			$this->getLevel()->scheduleUpdate($this, 500);
-			$this->togglePowered();
-		}
+	public function canBeActivated() : bool {
+		return true;
 	}
 
-	public function getDrops(Item $item){
-		return [[$this->id,0,1]];
-	}
-
-	public function isPowered(){
+	public function isActivated(Block $from = null){
 		return (($this->meta & 0x08) === 0x08);
 	}
 
-	/**
-	 * Toggles the current state of this button
-	 *
-	 * @param
-	 *        	bool
-	 *        	whether or not the button is powered
-	 */
-	public function togglePowered(){
-		$this->meta ^= 0x08;
-		if($this->isPowered()){
-			$this->getLevel()->addSound(new ClickSound($this));
-			$this->power=15;
+	public function onActivate(Item $item, Player $player = null){
+		if(!$this->isActivated()){
+			$this->meta ^= 0x08;
+			$this->getLevel()->setBlock($this, $this, true, false);
+			$this->getLevel()->addSound(new ButtonClickSound($this));
+			$this->activate();
+			$this->getLevel()->scheduleUpdate($this, 30);
 		}
-		else{
-			$this->getLevel()->addSound(new ClickSound($this));
-			$this->power=0;
-		}
-		$this->getLevel()->setBlock($this, $this);
+		return true;
 	}
-
-	/**
-	 * Gets the face that this block is attached on
-	 *
-	 * @return BlockFace attached to
-	 */
-	public function getAttachedFace(){
-		$data = $this->meta;
-		if($this->meta & 0x08 === 0x08) // remove power byte if powered
-			$data |= 0x08;
-		$faces = [
-				5 => 0,
-				0 => 1,
-				3 => 2,
-				4 => 3,
-				1 => 4,
-				2 => 5,
-		];
-		return $faces[$data];
-	}
-
-	/**
-	 * Sets the direction this button is pointing toward
-	 */
-	public function setFacingDirection($face){
-		$data = ($this->meta ^ 0x08);
-			$faces = [
-				0 => 5,
-				1 => 0,
-				2 => 3,
-				3 => 4,
-				4 => 1,
-				5 => 2,
-			];
-			$face-=1;
-			if($face<0)
-				$face=5;
-		$this->setDamage($data |= $faces[$face]);
-	}
-	
-	public function onRun($currentTick){
-		
-	}
-
-	public function __toString(){
-		return $this->getName() . " " . ($this->isPowered()?"":"NOT ") . "POWERED";
-	}
-
 }

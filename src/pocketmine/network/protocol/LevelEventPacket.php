@@ -2,24 +2,19 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____  
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \ 
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/ 
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_| 
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
  * 
  *
 */
@@ -37,6 +32,7 @@ class LevelEventPacket extends DataPacket{
 	const EVENT_SOUND_SHOOT = 1002;
 	const EVENT_SOUND_DOOR = 1003;
 	const EVENT_SOUND_FIZZ = 1004;
+	const EVENT_SOUND_TNT = 1005;
 
 	const EVENT_SOUND_GHAST = 1007;
 	const EVENT_SOUND_GHAST_SHOOT = 1008;
@@ -50,9 +46,10 @@ class LevelEventPacket extends DataPacket{
 	const EVENT_SOUND_ZOMBIE_HEAL = 1017;
 	const EVENT_SOUND_ENDERMAN_TELEPORT = 1018;
 
-	const EVENT_SOUND_ANVIL_BREAK = 1020;
 	const EVENT_SOUND_ANVIL_USE = 1021;
 	const EVENT_SOUND_ANVIL_FALL = 1022;
+
+	const EVENT_SOUND_BUTTON_CLICK = 3500;
 
 	const EVENT_PARTICLE_SHOOT = 2000;
 	const EVENT_PARTICLE_DESTROY = 2001;
@@ -64,6 +61,11 @@ class LevelEventPacket extends DataPacket{
 	const EVENT_START_THUNDER = 3002;
 	const EVENT_STOP_RAIN = 3003;
 	const EVENT_STOP_THUNDER = 3004;
+
+	const EVENT_SOUND_EXPLODE = 3501;
+	const EVENT_SOUND_SPELL = 3504;
+	const EVENT_SOUND_SPLASH = 3506;
+	const EVENT_SOUND_GRAY_SPLASH = 3507;//TODO: fix name
 
 	const EVENT_SET_DATA = 4000;
 

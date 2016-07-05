@@ -2,25 +2,20 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
- * This program is a third party build by ImagicalMine.
- * 
- * PocketMine is free software: you can redistribute it and/or modify
+ *  ____            _        _   __  __ _                  __  __ ____
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author ImagicalMine Team
- * @link http://forums.imagicalcorp.ml/
- * 
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
+ *
  *
 */
 
@@ -50,7 +45,7 @@ class BaseLang{
 		$this->loadLang($path . $fallback . ".ini", $this->fallbackLang);
 	}
 
-	public function getName(){
+	public function getName() : string{
 		return $this->get("language.name");
 	}
 
@@ -91,7 +86,7 @@ class BaseLang{
 	 */
 	public function translateString($str, array $params = [], $onlyPrefix = null){
 		$baseText = $this->get($str);
-		$baseText = $this->parseTranslation( ($baseText !== null and ($onlyPrefix === null or strpos($str, $onlyPrefix) === 0)) ? $baseText : $str, $onlyPrefix);
+		$baseText = $this->parseTranslation(($baseText !== null and ($onlyPrefix === null or strpos($str, $onlyPrefix) === 0)) ? $baseText : $str, $onlyPrefix);
 
 		foreach($params as $i => $p){
 			$baseText = str_replace("{%$i}", $this->parseTranslation((string) $p), $baseText, $onlyPrefix);
@@ -103,7 +98,7 @@ class BaseLang{
 	public function translate(TextContainer $c){
 		if($c instanceof TranslationContainer){
 			$baseText = $this->internalGet($c->getText());
-			$baseText = $this->parseTranslation( $baseText !== null ? $baseText : $c->getText());
+			$baseText = $this->parseTranslation($baseText !== null ? $baseText : $c->getText());
 
 			foreach($c->getParameters() as $i => $p){
 				$baseText = str_replace("{%$i}", $this->parseTranslation($p), $baseText);
@@ -144,7 +139,13 @@ class BaseLang{
 		for($i = 0; $i < $len; ++$i){
 			$c = $text{$i};
 			if($replaceString !== null){
-				if((ord($c) >= 0x30 and ord($c) <= 0x39) or (ord($c) >= 0x41 and ord($c) <= 0x5a) or (ord($c) >= 0x61 and ord($c) <= 0x7a) or $c === "."){
+				$ord = ord($c);
+				if(
+					($ord >= 0x30 and $ord <= 0x39) // 0-9
+					or ($ord >= 0x41 and $ord <= 0x5a) // A-Z
+					or ($ord >= 0x61 and $ord <= 0x7a) or // a-z
+					$c === "." or $c === "-"
+				){
 					$replaceString .= $c;
 				}else{
 					if(($t = $this->internalGet(substr($replaceString, 1))) !== null and ($onlyPrefix === null or strpos($replaceString, $onlyPrefix) === 1)){
