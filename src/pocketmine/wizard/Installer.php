@@ -64,7 +64,7 @@ class Installer{
 			exit(-1);
 		}
 
-		echo "[?] " . $this->lang->skip_installer . " (y/N): ";
+		echo "[?] " . $this->lang->skip_installer . " (y|n): ";
 		if(strtolower($this->getInput()) === "y"){
 			return;
 		}
@@ -92,7 +92,7 @@ class Installer{
   (at your option) any later version.
 
 LICENSE;
-		echo "\n[?] " . $this->lang->accept_license . " (y/N): ";
+		echo "\n[?] " . $this->lang->accept_license . " (y|n): ";
 		if(strtolower($this->getInput("n")) != "y"){
 			echo "[!] " . $this->lang->you_have_to_accept_the_license . "\n";
 			sleep(5);
@@ -149,14 +149,14 @@ LICENSE;
 		echo "[?] " . $this->lang->max_players . " (" . self::DEFAULT_PLAYERS . "): ";
 		$config->set("max-players", (int) $this->getInput(self::DEFAULT_PLAYERS));
 		echo "[*] " . $this->lang->spawn_protection_info . "\n";
-		echo "[?] " . $this->lang->spawn_protection . " (Y/n): ";
+		echo "[?] " . $this->lang->spawn_protection . " (y|n): ";
 		if(strtolower($this->getInput("y")) == "n"){
 			$config->set("spawn-protection", -1);
 		}else{
 			$config->set("spawn-protection", 16);
 		}
 		
-		echo "[?] " . $this->lang->announce_player_achievements . " (y/N): ";
+		echo "[?] " . $this->lang->announce_player_achievements . " (y|n): ";
 		if(strtolower($this->getInput("n")) === "y"){
 			$config->set("announce-player-achievements", "on");
 		}else{
@@ -177,7 +177,7 @@ LICENSE;
 			$ops->save();
 		}
 		echo "[*] " . $this->lang->whitelist_info . "\n";
-		echo "[?] " . $this->lang->whitelist_enable . " (y/N): ";
+		echo "[?] " . $this->lang->whitelist_enable . " (y|n): ";
 		$config = new Config(\pocketmine\DATA . "server.properties", Config::PROPERTIES);
 		if(strtolower($this->getInput("n")) === "y"){
 			echo "[!] " . $this->lang->whitelist_warning . "\n";
@@ -192,7 +192,7 @@ LICENSE;
 		$config = new Config(\pocketmine\DATA . "server.properties", Config::PROPERTIES);
 		echo "[!] " . $this->lang->query_warning1 . "\n";
 		echo "[!] " . $this->lang->query_warning2 . "\n";
-		echo "[?] " . $this->lang->query_disable . " (y/N): ";
+		echo "[?] " . $this->lang->query_disable . " (y|n): ";
 		if(strtolower($this->getInput("n")) === "y"){
 			$config->set("enable-query", false);
 		}else{
@@ -200,7 +200,7 @@ LICENSE;
 		}
 
 		echo "[*] " . $this->lang->rcon_info . "\n";
-		echo "[?] " . $this->lang->rcon_enable . " (y/N): ";
+		echo "[?] " . $this->lang->rcon_enable . " (y|n): ";
 		if(strtolower($this->getInput("n")) === "y"){
 			$config->set("enable-rcon", true);
 			$password = substr(base64_encode(@Utils::getRandomBytes(20, false)), 3, 10);
@@ -211,7 +211,7 @@ LICENSE;
 		}
 
 		/*echo "[*] " . $this->lang->usage_info . "\n";
-		echo "[?] " . $this->lang->usage_disable . " (y/N): ";
+		echo "[?] " . $this->lang->usage_disable . " (y|n): ";
 		if(strtolower($this->getInput("n")) === "y"){
 			$config->set("send-usage", false);
 		}else{
