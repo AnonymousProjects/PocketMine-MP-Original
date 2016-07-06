@@ -21,7 +21,7 @@ if exist PocketMine-MO*.phar (
             if exist PocketMine-MO.phar (
                 set POCKETMINE_FILE=PocketMine-MO.phar
             ) else (
-		        echo "[ERROR] Couldn't find a valid PocketMine-MP installation."
+		        echo "[ERROR] Couldn't find a valid PocketMine installation."
 		        pause
 		        exit 8
 		    )
