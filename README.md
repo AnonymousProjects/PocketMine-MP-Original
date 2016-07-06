@@ -3,10 +3,11 @@
 ### ～Advanced Minecraft: Pocket Edition Server～
 
 
-## Contents
 
+### Contents
 * [English](#english)
 * [日本語](#日本語)
+
 
 
 
@@ -86,6 +87,8 @@ Most of the code in this repository was written by the PocketMine team and is li
 * Rewrite World Generator (Generate mobs)
 * LevelDB support for Windows
 
+
+
 ## 日本語
 * このソフトウェアは[Genisys](https://github.com/iTXTech/Genisys)をもとに制作しています。
 
@@ -96,7 +99,7 @@ Most of the code in this repository was written by the PocketMine team and is li
 Linuxの場合、[こちら](https://github.com/iTXTech/Genisys/wiki/Use-Docker-to-run-Genisys)をご覧ください
 
 
-#利用に関して
+# 利用に関して
 * このシステムはPocketMineをもとに製作しています。作者はめしだです。
 * PocketMine-MOとGenisysのもとになるPocketMine-MPは[PocketMine Team](https://github.com/PocketMine)が作成しています。
 * [PocketMine-MO用 PHP7](https://github.com/iTXTech/PHP-Genisys/)
