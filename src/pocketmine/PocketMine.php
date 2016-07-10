@@ -74,7 +74,7 @@ namespace pocketmine {
 
 	const VERSION = "1.8dev_MumeiOriginal";
 	const API_VERSION = "2.0.0";
-	const CODENAME = "暇(hima)";
+	const CODENAME = "桜(Sakura)";
 	const MINECRAFT_VERSION = "v0.15.x alpha";
 	const MINECRAFT_VERSION_NETWORK = "0.15.0";
 	const GENISYS_API_VERSION = '1.8';
