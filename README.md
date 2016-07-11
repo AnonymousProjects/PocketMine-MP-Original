@@ -90,7 +90,7 @@ Most of the code in this repository was written by the PocketMine team and is li
 
 
 ## 日本語
-* このソフトウェアは[Genisys](https://github.com/iTXTech/Genisys)をもとに制作しています。
+* このソフトウェアは[Genisys](https://github.com/iTXTech/Genisys)をベースに制作しています。
 
 ### ダウンロード
 * [こちら](https://www.dropbox.com/sh/sewvewls2to7dbd/AAB79Kq6-LJYLSaqVsYKlAz2a?dl=0)
