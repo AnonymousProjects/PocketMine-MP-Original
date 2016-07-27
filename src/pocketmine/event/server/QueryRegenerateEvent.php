@@ -28,7 +28,7 @@ use pocketmine\utils\Binary;
 class QueryRegenerateEvent extends ServerEvent{
 	public static $handlerList = null;
 
-	const GAME_ID = "MINECRAFTPE";
+	const GAME_ID = "Minecraft: PE";
 
 	private $timeout;
 	private $serverName;
@@ -55,7 +55,7 @@ class QueryRegenerateEvent extends ServerEvent{
 		$this->timeout = $timeout;
 		$this->serverName = $server->getMotd();
 		$this->listPlugins = $server->getProperty("settings.query-plugins", true);
-		$this->plugins = $server->getPluginManager()->getPlugins();
+		$this->plugins = str_replace(" ", "_", $server->getPluginManager()->getPlugins());
 		$this->players = [];
 		foreach($server->getOnlinePlayers() as $player){
 			if($player->isOnline()){
@@ -70,7 +70,20 @@ class QueryRegenerateEvent extends ServerEvent{
 		if($server->isDServerEnabled() and $server->dserverConfig["queryPlayers"]) $poc = $server->getDServerOnlinePlayers();
 		else $poc = count($this->players);
 
-		$this->gametype = ($server->getGamemode() & 0x01) === 0 ? "SMP" : "CMP";
+		switch ($server->getGamemode()){
+			case 0:
+			$this->gametype = "Survival";
+			break;
+			case 1:
+			$this->gametype = "Creative";
+			break;
+			case 2:
+			$this->gametype = "Adventure";
+			break;
+			case 3:
+			$this->gametype = "Spectator";
+			break;
+		}
 		$this->version = $server->getVersion();
 		$this->server_engine = $server->getName() . " " . $server->getPocketMineVersion();
 		$this->map = $server->getDefaultLevel() === null ? "unknown" : $server->getDefaultLevel()->getName();
@@ -191,6 +204,7 @@ class QueryRegenerateEvent extends ServerEvent{
 
 		$KVdata = [
 			"splitnum" => chr(128),
+			//""
 			"hostname" => $this->serverName,
 			"gametype" => $this->gametype,
 			"game_id" => self::GAME_ID,
@@ -203,6 +217,7 @@ class QueryRegenerateEvent extends ServerEvent{
 			"whitelist" => $this->whitelist,
 			"hostip" => $this->ip,
 			"hostport" => $this->port
+			"motd_version" => $server->getMPVersion();
 		];
 
 		foreach($KVdata as $key => $value){
