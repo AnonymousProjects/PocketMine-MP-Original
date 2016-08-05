@@ -92,6 +92,7 @@ class QueryRegenerateEvent extends ServerEvent{
 		$this->whitelist = $server->hasWhitelist() ? "on" : "off";
 		$this->port = $server->getPort();
 		$this->ip = $server->getIp();
+		$this->motd_version = $server->getMPVersion();
 
 	}
 
@@ -204,7 +205,6 @@ class QueryRegenerateEvent extends ServerEvent{
 
 		$KVdata = [
 			"splitnum" => chr(128),
-			//""
 			"hostname" => $this->serverName,
 			"gametype" => $this->gametype,
 			"game_id" => self::GAME_ID,
@@ -216,8 +216,8 @@ class QueryRegenerateEvent extends ServerEvent{
 			"maxplayers" => $this->maxPlayers,
 			"whitelist" => $this->whitelist,
 			"hostip" => $this->ip,
-			"hostport" => $this->port
-			"motd_version" => $server->getMPVersion();
+			"hostport" => $this->port,
+			"motd_version" => $this->motd_version
 		];
 
 		foreach($KVdata as $key => $value){

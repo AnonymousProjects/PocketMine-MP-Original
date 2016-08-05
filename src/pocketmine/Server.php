@@ -450,6 +450,10 @@ class Server{
 		return \pocketmine\CODENAME;
 	}
 
+	public function getMPVersion(){
+		return \pocketmine\MINECRAFT_VERSION_NETWORK;
+	}
+
 	/**
 	 * @return string
 	 */
